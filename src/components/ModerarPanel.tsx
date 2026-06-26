@@ -11,7 +11,8 @@ export default function ModerarPanel() {
   const supabase = useMemo(() => createClient(), []);
   const [session, setSession] = useState<Session | null>(null);
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [isMod, setIsMod] = useState<boolean | null>(null);
   const [centros, setCentros] = useState<Centro[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
@@ -37,8 +38,9 @@ export default function ModerarPanel() {
   useEffect(() => { if (session) load(); }, [session, load]);
 
   async function signIn() {
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (!error) setSent(true);
+    setLoginError(null);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setLoginError(error.message || "No se pudo iniciar sesión.");
   }
 
   async function act(fn: string, id: string, label: string) {
@@ -52,18 +54,17 @@ export default function ModerarPanel() {
     return (
       <Wrap>
         <h2 className="text-lg font-extrabold">Acceso de moderadores</h2>
-        {sent ? (
-          <p className="text-stone-600 text-sm mt-3">Te enviamos un enlace de acceso a <b>{email}</b>. Ábrelo en este dispositivo.</p>
-        ) : (
-          <>
-            <p className="text-stone-500 text-[13px] mt-1">Te enviaremos un enlace mágico para entrar.</p>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@email.com"
-              className="w-full mt-3 bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 text-[14px]" />
-            <button onClick={signIn} className="w-full mt-2 bg-stone-900 text-white font-semibold py-3 rounded-xl text-[14px]">
-              Enviar enlace
-            </button>
-          </>
-        )}
+        <p className="text-stone-500 text-[13px] mt-1">Entra con el usuario y contraseña creados en Supabase.</p>
+        <label className="block mt-3 text-[12px] font-bold text-stone-500" htmlFor="moderator-email">Email</label>
+        <input id="moderator-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@email.com"
+          className="w-full mt-1 bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 text-[14px]" />
+        <label className="block mt-3 text-[12px] font-bold text-stone-500" htmlFor="moderator-password">Contraseña</label>
+        <input id="moderator-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
+          className="w-full mt-1 bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 text-[14px]" />
+        {loginError && <p className="text-rose-600 text-[12px] mt-2">{loginError}</p>}
+        <button onClick={signIn} className="w-full mt-3 bg-stone-900 text-white font-semibold py-3 rounded-xl text-[14px]">
+          Entrar
+        </button>
       </Wrap>
     );
   }
