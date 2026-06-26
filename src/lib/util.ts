@@ -43,6 +43,19 @@ export function km(distancia_m?: number) {
     : `${(distancia_m / 1000).toFixed(1)} km`;
 }
 
+export function distanceMeters(from: [number, number], to: [number, number]) {
+  const [lat1, lon1] = from;
+  const [lat2, lon2] = to;
+  const r = 6371000;
+  const toRad = (n: number) => (n * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * r * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export function mapsUrl(lat: number, lon: number) {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -33,6 +33,16 @@ function MapRef({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null> }) {
   return null;
 }
 
+function RecenterOnUser({ userPos }: { userPos: [number, number] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView(userPos, 14, { animate: true });
+  }, [map, userPos]);
+
+  return null;
+}
+
 export default function MapView({
   centros, userPos, selectedId, onSelect,
 }: {
@@ -47,6 +57,7 @@ export default function MapView({
     <div className="relative h-full w-full">
       <MapContainer center={userPos} zoom={13} zoomControl={false} className="h-full w-full">
         <MapRef mapRef={mapRef} />
+        <RecenterOnUser userPos={userPos} />
         <TileLayer
           attribution='&copy; OpenStreetMap'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

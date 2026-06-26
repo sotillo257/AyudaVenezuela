@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { Centro } from "@/lib/types";
 import {
-  STATUS, OPERADOR_LABEL, CATEGORIAS, freshness, km, mapsUrl, whatsappText, ME,
+  STATUS, OPERADOR_LABEL, CATEGORIAS, freshness, km, mapsUrl, whatsappText, ME, distanceMeters,
 } from "@/lib/util";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,6 +19,9 @@ const MapView = dynamic(() => import("./MapView"), {
 });
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+const NEAREST_RADIUS_M = 20_000_000;
+
+type LocationStatus = "idle" | "locating" | "ready" | "denied" | "unavailable" | "insecure";
 
 export default function AppShell({ initialCentros }: { initialCentros: Centro[]; loadError?: boolean }) {
   const supabase = useMemo(() => createClient(), []);
@@ -30,30 +33,82 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
   const [sharing, setSharing] = useState<Centro | null>(null);
   const [reporting, setReporting] = useState<Centro | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [locationStatus, setLocationStatus] = useState<LocationStatus>("idle");
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
 
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(null), 1900); };
 
-  useEffect(() => {
-    if (!navigator.geolocation) return;
+  const applyDistances = useCallback((items: Centro[], pos: [number, number]) => {
+    return items
+      .map((c) => ({
+        ...c,
+        distancia_m: distanceMeters(pos, [c.lat, c.lon]),
+      }))
+      .sort((a, b) => (a.distancia_m ?? 1e12) - (b.distancia_m ?? 1e12));
+  }, []);
+
+  const loadNearest = useCallback(async (pos: [number, number]) => {
+    const { data, error } = await supabase.rpc("centros_cercanos", {
+      p_lat: pos[0], p_lon: pos[1], p_radio_m: NEAREST_RADIUS_M,
+    });
+
+    if (error) {
+      console.warn("No se pudieron cargar centros cercanos desde Supabase", error);
+      setCentros((current) => applyDistances(current.length ? current : initialCentros, pos));
+      setLocationMessage("Ubicación detectada. Ordeno por distancia calculada en el móvil.");
+      return;
+    }
+
+    const nearest = (data ?? []) as Centro[];
+    setCentros(nearest.length ? nearest : applyDistances(initialCentros, pos));
+    setLocationMessage(nearest.length ? "Centros ordenados por cercanía real." : "No hay centros en el radio; muestro los disponibles ordenados por distancia.");
+  }, [applyDistances, initialCentros, supabase]);
+
+  const locateUser = useCallback((manual = false) => {
+    if (!navigator.geolocation) {
+      setLocationStatus("unavailable");
+      setLocationMessage("Este navegador no permite detectar ubicación.");
+      return;
+    }
+
+    if (!window.isSecureContext && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      setLocationStatus("insecure");
+      setLocationMessage("Para usar GPS real abre la app por HTTPS. En HTTP el navegador bloquea la ubicación.");
+      return;
+    }
+
+    setLocationStatus("locating");
+    setLocationMessage(manual ? "Pidiendo permiso de ubicación…" : null);
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         const pos: [number, number] = [coords.latitude, coords.longitude];
         setUserPos(pos);
-        const { data } = await supabase.rpc("centros_cercanos", {
-          p_lat: pos[0], p_lon: pos[1], p_radio_m: 60000,
-        });
-        if (data && data.length) setCentros(data as Centro[]);
+        setLocationStatus("ready");
+        setLocationMessage(`Ubicación detectada con precisión aprox. ${Math.round(coords.accuracy)} m.`);
+        await loadNearest(pos);
       },
-      () => {},
-      { timeout: 8000 }
+      (err) => {
+        const denied = err.code === err.PERMISSION_DENIED;
+        setLocationStatus(denied ? "denied" : "unavailable");
+        setLocationMessage(
+          denied
+            ? "Permiso de ubicación denegado. Actívalo en el navegador para ver los centros más cercanos."
+            : "No he podido obtener tu ubicación. Prueba de nuevo o revisa el GPS del dispositivo."
+        );
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
-  }, [supabase]);
+  }, [loadNearest]);
+
+  useEffect(() => {
+    locateUser(false);
+  }, [locateUser]);
 
   const toggle = (c: string) =>
     setFilters((f) => (f.includes(c) ? f.filter((x) => x !== c) : [...f, c]));
 
   const list = useMemo(() => {
-    return centros
+    return [...centros]
       .filter((c) =>
         filters.length === 0 ||
         filters.some((f) => c.acepta.some((a) => a.toLowerCase().includes(f.toLowerCase())))
@@ -92,6 +147,20 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
               <div className="text-[11px] text-stone-500 flex items-center gap-1 mt-0.5">
                 <MapPin size={11} /> {userPos ? "Cerca de ti" : "Cerca de L'Hospitalet"} · {verifiedCount} verificados hoy
               </div>
+              <button
+                onClick={() => locateUser(true)}
+                disabled={locationStatus === "locating"}
+                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 disabled:text-stone-400"
+              >
+                <Navigation size={12} /> {locationStatus === "locating" ? "Detectando ubicación…" : userPos ? "Actualizar mi ubicación" : "Usar mi ubicación real"}
+              </button>
+              {locationMessage && (
+                <p className={`mt-1 max-w-[250px] text-[10.5px] leading-snug ${
+                  locationStatus === "ready" ? "text-emerald-700" : locationStatus === "insecure" || locationStatus === "denied" ? "text-amber-700" : "text-stone-500"
+                }`}>
+                  {locationMessage}
+                </p>
+              )}
             </div>
             <Link href="/anadir" className="flex items-center gap-1 text-[12px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full">
               <Plus size={13} /> Añadir
