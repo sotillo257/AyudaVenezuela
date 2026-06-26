@@ -72,7 +72,7 @@ export default function AddCenterForm() {
       </select>
 
       <input className={input} placeholder="Dirección" value={form.direccion} onChange={set("direccion")} />
-      <input className={input} placeholder="Zona / ciudad (ej. L'Hospitalet)" value={form.area} onChange={set("area")} />
+      <input className={input} placeholder="Zona / ciudad (ej. Caracas)" value={form.area} onChange={set("area")} />
       <input className={input} placeholder="Contacto (teléfono / email)" value={form.contacto} onChange={set("contacto")} />
       <input className={input} placeholder="Enlace público de evidencia (URL)" value={form.fuente_url} onChange={set("fuente_url")} />
       <input className={input} placeholder="Persona responsable" value={form.responsable} onChange={set("responsable")} />

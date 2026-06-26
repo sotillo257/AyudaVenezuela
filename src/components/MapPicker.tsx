@@ -1,6 +1,7 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { useEffect, useRef, type MutableRefObject } from "react";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { ME } from "@/lib/util";
@@ -17,17 +18,60 @@ function Clicker({ onPick }: { onPick: (lat: number, lon: number) => void }) {
   return null;
 }
 
+function MapReady({ mapRef }: { mapRef: MutableRefObject<L.Map | null> }) {
+  const map = useMap();
+
+  useEffect(() => {
+    mapRef.current = map;
+    const id = window.setTimeout(() => map.invalidateSize(), 80);
+    return () => window.clearTimeout(id);
+  }, [map, mapRef]);
+
+  return null;
+}
+
 export default function MapPicker({
   value, onPick,
 }: {
   value: [number, number] | null;
   onPick: (lat: number, lon: number) => void;
 }) {
+  const mapRef = useRef<L.Map | null>(null);
+  const pickVisibleCenter = () => {
+    const center = mapRef.current?.getCenter();
+    onPick(center?.lat ?? (value ?? ME)[0], center?.lng ?? (value ?? ME)[1]);
+  };
+
   return (
-    <MapContainer center={value ?? ME} zoom={13} className="h-48 w-full rounded-xl overflow-hidden">
-      <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <Clicker onPick={onPick} />
-      {value && <Marker position={value} icon={pin} />}
-    </MapContainer>
+    <div
+      role="region"
+      aria-label="Seleccionar ubicación del centro"
+      className="relative h-72 w-full overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-inner"
+    >
+      <MapContainer center={value ?? ME} zoom={14} scrollWheelZoom={false} className="h-full w-full">
+        <MapReady mapRef={mapRef} />
+        <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <Clicker onPick={onPick} />
+        {value && <Marker position={value} icon={pin} />}
+      </MapContainer>
+
+      <div className="pointer-events-none absolute left-3 right-3 top-3 z-[500] rounded-xl bg-white/95 px-3 py-2 text-[11.5px] font-semibold text-stone-700 shadow-sm">
+        Arrastra el mapa y toca el punto exacto del centro de acopio.
+      </div>
+
+      <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-[500] rounded-xl bg-stone-900/90 px-3 py-2 text-[11px] text-white shadow-sm">
+        {value
+          ? `Ubicación seleccionada: ${value[0].toFixed(5)}, ${value[1].toFixed(5)}`
+          : "Sin ubicación seleccionada todavía. Toca el mapa o usa el botón para colocar el marcador."}
+      </div>
+
+      <button
+        type="button"
+        onClick={pickVisibleCenter}
+        className="absolute bottom-[78px] left-1/2 z-[1000] -translate-x-1/2 rounded-full bg-emerald-600 px-4 py-2 text-[12px] font-bold text-white shadow-lg pointer-events-auto active:scale-[0.98]"
+      >
+        Seleccionar centro del mapa
+      </button>
+    </div>
   );
 }
