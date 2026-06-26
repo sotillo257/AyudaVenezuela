@@ -1,0 +1,54 @@
+import type { Estado, Operador } from "./types";
+
+export const EXPIRY_H = 48;
+
+export const ME: [number, number] = [41.3597, 2.0997]; // L'Hospitalet (fallback)
+
+export const STATUS: Record<Estado, { label: string; color: string; pill: string }> = {
+  verificado: { label: "Verificado", color: "#059669", pill: "bg-emerald-50 text-emerald-700" },
+  pendiente: { label: "Pendiente de confirmar", color: "#F59E0B", pill: "bg-amber-50 text-amber-700" },
+  caducado: { label: "Caducado · sin reconfirmar", color: "#F59E0B", pill: "bg-amber-50 text-amber-700" },
+  cerrado: { label: "Cerrado · no recibe", color: "#A8A29E", pill: "bg-stone-100 text-stone-500" },
+};
+
+export const OPERADOR_LABEL: Record<Operador, string> = {
+  ong: "ONG",
+  iglesia: "Iglesia",
+  universidad: "Universidad",
+  asociacion: "Asociación",
+  grupo_comunitario: "Grupo comunitario",
+  consulado: "Consulado",
+  ayuntamiento: "Ayuntamiento",
+  empresa: "Empresa",
+};
+
+export const CATEGORIAS = [
+  "Agua", "Alimentos", "Higiene", "Medicinas",
+  "Primeros auxilios", "Mantas", "Ropa", "Niños",
+];
+
+export function freshness(ultima: string | null) {
+  if (!ultima) return { text: "Sin verificar aún", cls: "text-amber-600", expired: false, left: null as number | null };
+  const h = Math.max(0, Math.floor((Date.now() - new Date(ultima).getTime()) / 3.6e6));
+  const left = EXPIRY_H - h;
+  if (left <= 0) return { text: "Verificación caducada", cls: "text-rose-600", expired: true, left: 0 };
+  const ago = h < 1 ? "hace menos de 1 h" : `hace ${h} h`;
+  return { text: `Comprobado ${ago}`, cls: left <= 12 ? "text-amber-600" : "text-stone-500", expired: false, left };
+}
+
+export function km(distancia_m?: number) {
+  if (distancia_m == null) return null;
+  return distancia_m < 1000
+    ? `${Math.round(distancia_m)} m`
+    : `${(distancia_m / 1000).toFixed(1)} km`;
+}
+
+export function mapsUrl(lat: number, lon: number) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
+}
+
+export function whatsappText(c: { nombre: string; area: string | null; acepta: string[]; horario: string | null }, url: string) {
+  const t = `Centro de acopio en ${c.area ?? "tu zona"}: ${c.nombre}. Recibe ${c.acepta.join(", ")}.` +
+    (c.horario ? ` Horario: ${c.horario}.` : "") + ` Info y ruta: ${url}`;
+  return `https://wa.me/?text=${encodeURIComponent(t)}`;
+}
