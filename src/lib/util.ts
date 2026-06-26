@@ -2,7 +2,7 @@ import type { Estado, Operador } from "./types";
 
 export const EXPIRY_H = 48;
 
-export const ME: [number, number] = [41.3597, 2.0997]; // L'Hospitalet (fallback)
+export const ME: [number, number] = [10.5006, -66.8890]; // Plaza Venezuela, Caracas (fallback)
 
 export const STATUS: Record<Estado, { label: string; color: string; pill: string }> = {
   verificado: { label: "Verificado", color: "#059669", pill: "bg-emerald-50 text-emerald-700" },

@@ -145,7 +145,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
                 <Heart size={17} className="text-emerald-600 fill-emerald-600" /> Ayuda Venezuela
               </div>
               <div className="text-[11px] text-stone-500 flex items-center gap-1 mt-0.5">
-                <MapPin size={11} /> {userPos ? "Cerca de ti" : "Cerca de L'Hospitalet"} · {verifiedCount} verificados hoy
+                <MapPin size={11} /> {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"} · {verifiedCount} verificados hoy
               </div>
               <button
                 onClick={() => locateUser(true)}
