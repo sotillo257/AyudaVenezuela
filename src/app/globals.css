@@ -18,6 +18,11 @@ html, body {
   font: inherit;
 }
 
+.h-9 {
+    height: auto;
+    width: 100% !important;
+}
+
 /* ocultar scrollbars de las tiras de filtros */
 .no-sb::-webkit-scrollbar { display: none; }
 .no-sb { scrollbar-width: none; }
