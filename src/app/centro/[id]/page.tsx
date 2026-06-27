@@ -12,11 +12,11 @@ async function getCentro(id: string): Promise<Centro | null> {
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const c = await getCentro(params.id);
-  if (!c) return { title: "Centro no disponible · Ayuda Venezuela" };
+  if (!c) return { title: "Centro no disponible · Acopios Venezuela" };
   const desc = `${OPERADOR_LABEL[c.operador]} en ${c.area}. Recibe ${c.acepta.join(", ")}.` +
     (c.horario ? ` Horario: ${c.horario}.` : "");
   return {
-    title: `${c.nombre} · Ayuda Venezuela`,
+    title: `${c.nombre} · Acopios Venezuela`,
     description: desc,
     openGraph: { title: c.nombre, description: desc, type: "article" },
     twitter: { card: "summary", title: c.nombre, description: desc },
@@ -44,7 +44,7 @@ export default async function CentroPage({ params }: { params: { id: string } })
   return (
     <main className="max-w-md lg:max-w-2xl mx-auto min-h-screen bg-stone-50">
       <div className="bg-white border-b border-stone-200 px-5 py-3 lg:px-8 lg:py-4">
-        <Link href="/" className="text-emerald-700 font-semibold text-sm lg:text-base">← Ayuda Venezuela</Link>
+        <Link href="/" className="text-emerald-700 font-semibold text-sm lg:text-base">← Acopios Venezuela</Link>
       </div>
       <div className="px-5 py-5 lg:px-8 lg:py-7">
         <span className={`inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full lg:text-[12px] ${s.pill}`}>

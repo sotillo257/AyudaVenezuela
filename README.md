@@ -1,4 +1,4 @@
-# Ayuda Venezuela – Centros Verificados
+# Acopios Venezuela – Centros Verificados
 
 Webapp móvil (Next.js App Router) para encontrar **centros de acopio verificados**:
 mapa con tu ubicación, qué reciben hoy, horario, próxima salida hacia Venezuela,
@@ -39,7 +39,7 @@ npm run dev   # http://localhost:3000
 ```
 
 Rutas: `/` (mapa, lista, qué donar) · `/centro/[id]` (ficha pública + OpenGraph) ·
-`/anadir` (proponer centro → entra como *pendiente*) · `/moderar` (panel).
+`/anadir` (proponer centro → entra como *pendiente*) · `/contacto` (formulario de contacto → guarda en Supabase) · `/moderar` (panel).
 
 ---
 
