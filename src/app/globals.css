@@ -24,6 +24,19 @@ html, body {
 }
 /*Versión movil*/
 @media (max-width: 1023px) {
+  /*texto de ubicación*/
+  .mt-0\.5.flex.items-center.gap-1.text-\[11px\].text-stone-500.lg\:text-\[13px\] {
+    text-align: center !important;
+    margin: 0 12%;
+}
+  /*Boton de usar ubicación*/
+  button.mt-2.inline-flex.items-center.gap-1.text-\[11px\].font-semibold.text-sky-700.disabled\:text-stone-400.lg\:text-\[12\.5px\] {
+    font-size: 12px !important;
+    margin: 8px 25%;
+    padding: 10px 20px;
+    border: solid 1px #1998d8;
+    border-radius: 20px;
+}
   .flex.items-center.gap-2.lg\:flex-col.lg\:items-end.lg\:gap-3 {
     display: flex;
     flex-direction: row;
