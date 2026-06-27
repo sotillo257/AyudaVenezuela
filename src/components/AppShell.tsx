@@ -125,6 +125,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
     return Object.entries(d).sort((a, b) => b[1] - a[1]);
   }, [centros]);
   const maxDemand = demand[0]?.[1] ?? 1;
+  const bottomNavHeightClass = "pb-[calc(6rem+env(safe-area-inset-bottom,0px))]";
 
   async function sendReport(motivo: string) {
     if (!reporting) return;
@@ -134,8 +135,8 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
   }
 
   return (
-    <div className="min-h-screen bg-stone-200 flex justify-center">
-      <div className="w-full max-w-md bg-stone-50 min-h-screen relative flex flex-col overflow-hidden shadow-xl shadow-stone-300/40">
+    <div className="min-h-[100dvh] bg-stone-200 flex justify-center">
+      <div className="w-full max-w-md bg-stone-50 min-h-[100dvh] relative flex flex-col overflow-hidden shadow-xl shadow-stone-300/40">
 
         {/* Header */}
         <header className="bg-white border-b border-stone-200 px-[18px] pt-4 pb-3 z-30">
@@ -194,7 +195,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
 
           {/* LISTA */}
           {tab === "lista" && (
-            <div className="absolute inset-0 overflow-y-auto px-[14px] py-3 pb-24">
+            <div className={`absolute inset-0 overflow-y-auto px-[14px] py-3 ${bottomNavHeightClass}`}>
               <div className="flex gap-1.5 overflow-x-auto no-sb pb-2">
                 {CATEGORIAS.map((c) => (
                   <button key={c} onClick={() => toggle(c)}
@@ -248,7 +249,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
 
           {/* DONAR */}
           {tab === "donar" && (
-            <div className="absolute inset-0 overflow-y-auto px-[18px] py-5 pb-24">
+            <div className={`absolute inset-0 overflow-y-auto px-[18px] py-5 ${bottomNavHeightClass}`}>
               <h2 className="text-[19px] font-extrabold">Lo más necesario ahora</h2>
               <p className="text-[12.5px] text-stone-500 mt-1 leading-relaxed">
                 Priorizado según lo que piden los centros activos cerca de ti — no una lista genérica.
@@ -275,11 +276,11 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
         </div>
 
         {/* Bottom nav */}
-        <nav className="bg-white border-t border-stone-200 flex z-30">
+        <nav className="sticky bottom-0 z-30 flex border-t border-stone-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] shadow-[0_-6px_18px_rgba(0,0,0,0.06)]">
           {([["mapa", MapIcon, "Mapa"], ["lista", List, "Lista"], ["donar", Heart, "Qué donar"]] as const).map(
             ([k, Icon, label]) => (
               <button key={k} onClick={() => setTab(k)}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10.5px] font-medium ${
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 px-2 pt-2.5 pb-2 text-[10.5px] font-medium ${
                   tab === k ? "text-stone-900" : "text-stone-400"}`}>
                 <Icon size={20} className={tab === k ? "text-emerald-600" : ""} /> {label}
               </button>

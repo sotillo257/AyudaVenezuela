@@ -73,9 +73,13 @@ describe("AppShell", () => {
 
   it("renders public centers, lists nearest first, filters by category and shows donation demand", async () => {
     const user = userEvent.setup();
-    render(<AppShell initialCentros={centros} />);
+    const { container } = render(<AppShell initialCentros={centros} />);
 
     expect(screen.getByText(/2 verificados hoy/i)).toBeInTheDocument();
+    expect(container.firstChild).toHaveClass("min-h-[100dvh]");
+    const bottomNav = screen.getByRole("navigation");
+    expect(bottomNav).toHaveClass("sticky");
+    expect(bottomNav.className).toContain("safe-area-inset-bottom");
     await user.click(screen.getByRole("button", { name: /lista/i }));
 
     const cards = screen.getAllByRole("button", { name: /verificado/i });
@@ -90,6 +94,7 @@ describe("AppShell", () => {
 
     await user.click(screen.getByRole("button", { name: /qué donar/i }));
     const donationPanel = screen.getByText("Lo más necesario ahora").closest("div")!;
+    expect(donationPanel.className).toContain("safe-area-inset-bottom");
     expect(within(donationPanel).getByText("Agua")).toBeInTheDocument();
   });
 });
