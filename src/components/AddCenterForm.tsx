@@ -55,43 +55,49 @@ export default function AddCenterForm() {
 
   if (done) {
     return (
-      <div className="px-6 py-16 text-center">
+      <div className="px-6 py-16 text-center lg:py-24">
         <CheckCircle2 className="mx-auto text-emerald-600" size={40} />
-        <h2 className="text-xl font-extrabold mt-3">Ya está visible en el mapa</h2>
-        <p className="text-stone-500 text-sm mt-2">
+        <h2 className="text-xl font-extrabold mt-3 lg:text-2xl">Ya está visible en el mapa</h2>
+        <p className="text-stone-500 text-sm mt-2 lg:text-base lg:max-w-md lg:mx-auto">
           Ya aparece en el mapa como punto sin verificar. Un moderador lo revisará para decidir si pasa a mostrarse como punto confiable.
         </p>
-        <Link href="/" className="inline-block mt-5 text-emerald-700 font-semibold">← Volver al mapa</Link>
+        <Link href="/" className="inline-block mt-5 text-emerald-700 font-semibold lg:text-lg">← Volver al mapa</Link>
       </div>
     );
   }
 
-  const input = "w-full text-[14px] bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 placeholder:text-stone-400";
+  const input = "w-full text-[14px] bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 placeholder:text-stone-400 lg:text-[15px] lg:px-4 lg:py-3";
 
   return (
-    <div className="px-5 py-5 space-y-3">
-      <p className="text-[12.5px] text-stone-500">
+    <div className="px-5 py-5 space-y-3 lg:px-8 lg:py-7 lg:space-y-4">
+      <p className="text-[12.5px] text-stone-500 lg:text-[14px]">
         Se publica al instante como punto sin verificar. Cuanto mejor la evidencia, antes podrá revisarse y pasar a punto confiable.
       </p>
 
-      <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-[12.5px] leading-relaxed text-sky-900">
+      <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-[12.5px] leading-relaxed text-sky-900 lg:text-[14px] lg:px-5 lg:py-4">
         <b>Validación del centro:</b> necesitamos el nombre, apellido y teléfono de quien lo propone.
         Estos datos <b>no se mostrarán públicamente</b>; se usarán solo para validar el centro si hace falta contactarte.
       </div>
 
-      <input className={input} placeholder="Organización responsable *" value={form.nombre} onChange={set("nombre")} />
+      <div className="grid gap-3 lg:grid-cols-2">
+        <input className={input} placeholder="Organización responsable *" value={form.nombre} onChange={set("nombre")} />
 
-      <select className={input} value={form.operador} onChange={set("operador")}>
-        {OPERADORES.map((o) => <option key={o} value={o}>{OPERADOR_LABEL[o]}</option>)}
-      </select>
+        <select className={input} value={form.operador} onChange={set("operador")}>
+          {OPERADORES.map((o) => <option key={o} value={o}>{OPERADOR_LABEL[o]}</option>)}
+        </select>
+      </div>
 
-      <input className={input} placeholder="Dirección" value={form.direccion} onChange={set("direccion")} />
-      <input className={input} placeholder="Zona / ciudad (ej. Caracas)" value={form.area} onChange={set("area")} />
-      <input className={input} placeholder="Contacto público del centro (teléfono / email)" value={form.contacto} onChange={set("contacto")} />
-      <input className={input} placeholder="Enlace público de evidencia (URL)" value={form.fuente_url} onChange={set("fuente_url")} />
+      <div className="grid gap-3 lg:grid-cols-2">
+        <input className={input} placeholder="Dirección" value={form.direccion} onChange={set("direccion")} />
+        <input className={input} placeholder="Zona / ciudad (ej. Caracas)" value={form.area} onChange={set("area")} />
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <input className={input} placeholder="Contacto público del centro (teléfono / email)" value={form.contacto} onChange={set("contacto")} />
+        <input className={input} placeholder="Enlace público de evidencia (URL)" value={form.fuente_url} onChange={set("fuente_url")} />
+      </div>
       <input className={input} placeholder="Persona responsable del centro" value={form.responsable} onChange={set("responsable")} />
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         <input className={input} placeholder="Tu nombre *" value={form.proponenteNombre} onChange={set("proponenteNombre")} />
         <input className={input} placeholder="Tu apellido *" value={form.proponenteApellido} onChange={set("proponenteApellido")} />
       </div>
@@ -122,7 +128,7 @@ export default function AddCenterForm() {
       {err && <p className="text-[12.5px] text-rose-600">{err}</p>}
 
       <button onClick={submit} disabled={busy}
-        className="w-full bg-stone-900 text-white font-semibold py-3 rounded-xl text-[14px] disabled:opacity-50">
+        className="w-full bg-stone-900 text-white font-semibold py-3 rounded-xl text-[14px] disabled:opacity-50 lg:text-[15px] lg:py-3.5 lg:max-w-sm lg:mx-auto lg:block">
         {busy ? "Enviando…" : "Enviar a revisión"}
       </button>
     </div>

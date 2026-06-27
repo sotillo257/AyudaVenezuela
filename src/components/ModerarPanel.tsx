@@ -122,8 +122,8 @@ export default function ModerarPanel() {
   if (!session) {
     return (
       <Wrap>
-        <h2 className="text-lg font-extrabold">Acceso de moderadores</h2>
-        <p className="text-stone-500 text-[13px] mt-1">Entra con el usuario y contraseña creados en Supabase.</p>
+        <h2 className="text-lg font-extrabold lg:text-xl">Acceso de moderadores</h2>
+        <p className="text-stone-500 text-[13px] mt-1 lg:text-[14px]">Entra con el usuario y contraseña creados en Supabase.</p>
         <label className="block mt-3 text-[12px] font-bold text-stone-500" htmlFor="moderator-email">Email</label>
         <input id="moderator-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@email.com"
           className="w-full mt-1 bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 text-[14px]" />
@@ -160,7 +160,7 @@ export default function ModerarPanel() {
         <button onClick={() => supabase.auth.signOut()} className="text-stone-400 text-[12px]">Salir</button>
       </div>
 
-      <div className="space-y-3 mt-4">
+      <div className="space-y-3 mt-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
         {centros.map((c) => {
           const f = freshness(c.ultima_verificacion);
           const isEditing = editingId === c.id && editForm;
@@ -273,12 +273,12 @@ export default function ModerarPanel() {
 
 function Wrap({ children }: { children: React.ReactNode }) {
   return (
-    <main className="max-w-md mx-auto min-h-screen bg-stone-50">
-      <div className="bg-white border-b border-stone-200 px-5 py-3 flex items-center justify-between">
-        <h1 className="font-extrabold text-[16px]">Ayuda Venezuela · Moderar</h1>
-        <Link href="/" className="text-stone-400 text-sm">Mapa</Link>
+    <main className="max-w-md lg:max-w-5xl mx-auto min-h-screen bg-stone-50">
+      <div className="bg-white border-b border-stone-200 px-5 py-3 lg:px-8 lg:py-4 flex items-center justify-between">
+        <h1 className="font-extrabold text-[16px] lg:text-[20px]">Ayuda Venezuela · Moderar</h1>
+        <Link href="/" className="text-stone-400 text-sm lg:text-base">Mapa</Link>
       </div>
-      <div className="px-5 py-5">{children}</div>
+      <div className="px-5 py-5 lg:px-8 lg:py-7">{children}</div>
     </main>
   );
 }
