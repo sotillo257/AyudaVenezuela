@@ -146,7 +146,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
                 <Heart size={17} className="text-emerald-600 fill-emerald-600" /> Ayuda Venezuela
               </div>
               <div className="text-[11px] text-stone-500 flex items-center gap-1 mt-0.5">
-                <MapPin size={11} /> {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"} · {verifiedCount} verificados hoy
+                <MapPin size={11} /> {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"} · {verifiedCount} puntos confiables
               </div>
               <button
                 onClick={() => locateUser(true)}
@@ -389,6 +389,12 @@ function CenterDetail({ c, onShare, onReport }: { c: Centro; onShare: () => void
         <Clock size={13} /> <b>{f.text}.</b>
         {!f.expired && f.left != null && <span>Caduca en {f.left} h si nadie lo reconfirma.</span>}
       </div>
+
+      {c.estado === "pendiente" && (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-[12.5px] leading-relaxed text-amber-900">
+          <b>Cuidado:</b> no sabemos si este punto es de confianza todavía. Este punto no ha sido verificado.
+        </div>
+      )}
 
       {c.acepta.length > 0 && (
         <>

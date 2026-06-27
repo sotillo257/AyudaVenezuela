@@ -5,8 +5,8 @@ export const EXPIRY_H = 48;
 export const ME: [number, number] = [10.5006, -66.8890]; // Plaza Venezuela, Caracas (fallback)
 
 export const STATUS: Record<Estado, { label: string; color: string; pill: string }> = {
-  verificado: { label: "Verificado", color: "#059669", pill: "bg-emerald-50 text-emerald-700" },
-  pendiente: { label: "Pendiente de confirmar", color: "#F59E0B", pill: "bg-amber-50 text-amber-700" },
+  verificado: { label: "Punto confiable", color: "#059669", pill: "bg-emerald-50 text-emerald-700" },
+  pendiente: { label: "Punto sin verificar", color: "#F59E0B", pill: "bg-amber-50 text-amber-700" },
   caducado: { label: "Caducado · sin reconfirmar", color: "#F59E0B", pill: "bg-amber-50 text-amber-700" },
   cerrado: { label: "Cerrado · no recibe", color: "#A8A29E", pill: "bg-stone-100 text-stone-500" },
 };

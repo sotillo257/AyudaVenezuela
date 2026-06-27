@@ -59,6 +59,27 @@ const centros: Centro[] = [
     created_at: "2026-06-26T10:00:00Z",
     distancia_m: 1000,
   },
+  {
+    id: "3",
+    nombre: "Centro Comunitario Nuevo",
+    operador: "grupo_comunitario",
+    estado: "pendiente",
+    lat: 42,
+    lon: -8,
+    direccion: null,
+    area: "Valencia",
+    horario: "12:00",
+    contacto: null,
+    acepta: ["Ropa"],
+    no_acepta: [],
+    proxima_salida: null,
+    notas: null,
+    fuente_url: null,
+    fuente_descripcion: null,
+    ultima_verificacion: null,
+    created_at: "2026-06-26T12:30:00Z",
+    distancia_m: 500,
+  },
 ];
 
 describe("AppShell", () => {
@@ -75,26 +96,38 @@ describe("AppShell", () => {
     const user = userEvent.setup();
     const { container } = render(<AppShell initialCentros={centros} />);
 
-    expect(screen.getByText(/2 verificados hoy/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cerca de Plaza Venezuela, Caracas/i).parentElement).toHaveTextContent("2 puntos confiables");
     expect(container.firstChild).toHaveClass("min-h-[100dvh]");
     const bottomNav = screen.getByRole("navigation");
     expect(bottomNav).toHaveClass("sticky");
     expect(bottomNav.className).toContain("safe-area-inset-bottom");
     await user.click(screen.getByRole("button", { name: /lista/i }));
 
-    const cards = screen.getAllByRole("button", { name: /verificado/i });
-    expect(cards[0]).toHaveTextContent("Centro Higiene");
-    expect(cards[0]).toHaveTextContent("1.0 km");
-    expect(cards[1]).toHaveTextContent("Centro Agua");
-    expect(cards[1]).toHaveTextContent("2.0 km");
+    const pendingCard = screen.getByRole("button", { name: /centro comunitario nuevo/i });
+    expect(pendingCard).toHaveTextContent("Centro Comunitario Nuevo");
+    expect(screen.getByText(/punto sin verificar/i)).toBeInTheDocument();
+    expect(pendingCard).toHaveTextContent("500 m");
 
     await user.click(screen.getByRole("button", { name: /^agua$/i }));
     expect(screen.getByText("Centro Agua")).toBeInTheDocument();
     expect(screen.queryByText("Centro Higiene")).not.toBeInTheDocument();
+    expect(screen.queryByText("Centro Comunitario Nuevo")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /qué donar/i }));
     const donationPanel = screen.getByText("Lo más necesario ahora").closest("div")!;
     expect(donationPanel.className).toContain("safe-area-inset-bottom");
     expect(within(donationPanel).getByText("Agua")).toBeInTheDocument();
+  });
+
+  it("warns clearly when a point is visible but not yet verified", async () => {
+    const user = userEvent.setup();
+    render(<AppShell initialCentros={centros} />);
+
+    await user.click(screen.getByRole("button", { name: /lista/i }));
+    await user.click(screen.getByRole("button", { name: /centro comunitario nuevo/i }));
+
+    const warningBox = screen.getByText(/este punto no ha sido verificado/i).parentElement;
+    expect(warningBox).toHaveTextContent("Cuidado:");
+    expect(warningBox).toHaveTextContent("no sabemos si este punto es de confianza todavía");
   });
 });

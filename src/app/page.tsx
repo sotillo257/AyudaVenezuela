@@ -9,7 +9,7 @@ export default async function HomePage() {
   const { data, error } = await supabase
     .from("v_centros")
     .select("*")
-    .eq("estado", "verificado")
+    .in("estado", ["verificado", "pendiente"])
     .order("created_at", { ascending: false });
 
   const centros = (data ?? []) as Centro[];

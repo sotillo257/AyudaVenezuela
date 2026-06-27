@@ -25,7 +25,7 @@ describe("MapPicker", () => {
     render(<MapPicker value={[10.5, -66.889]} onPick={vi.fn()} />);
 
     const region = screen.getByRole("region", { name: /seleccionar ubicación/i });
-    expect(region).toHaveClass("h-72");
+    expect(region).toHaveClass("h-[26rem]");
     expect(screen.getByTestId("map-container")).toHaveClass("h-full");
     expect(screen.getByText(/arrastra el mapa y toca el punto exacto/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /seleccionar centro del mapa/i })).toBeInTheDocument();

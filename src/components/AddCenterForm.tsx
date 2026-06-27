@@ -10,7 +10,7 @@ import { CheckCircle2 } from "lucide-react";
 
 const MapPicker = dynamic(() => import("./MapPicker"), {
   ssr: false,
-  loading: () => <div className="h-48 w-full bg-stone-100 rounded-xl" />,
+  loading: () => <div className="h-[26rem] w-full rounded-xl bg-stone-100" />,
 });
 
 const OPERADORES = Object.keys(OPERADOR_LABEL) as Operador[];
@@ -48,9 +48,9 @@ export default function AddCenterForm() {
     return (
       <div className="px-6 py-16 text-center">
         <CheckCircle2 className="mx-auto text-emerald-600" size={40} />
-        <h2 className="text-xl font-extrabold mt-3">Enviado a revisión</h2>
+        <h2 className="text-xl font-extrabold mt-3">Ya está visible en el mapa</h2>
         <p className="text-stone-500 text-sm mt-2">
-          No aparece en el mapa hasta que un moderador confirme la fuente y que sigue activo. Gracias.
+          Ya aparece en el mapa como punto sin verificar. Un moderador lo revisará para decidir si pasa a mostrarse como punto confiable.
         </p>
         <Link href="/" className="inline-block mt-5 text-emerald-700 font-semibold">← Volver al mapa</Link>
       </div>
@@ -62,7 +62,7 @@ export default function AddCenterForm() {
   return (
     <div className="px-5 py-5 space-y-3">
       <p className="text-[12.5px] text-stone-500">
-        Entra a revisión, no se publica automáticamente. Cuanto mejor la evidencia, antes se aprueba.
+        Se publica al instante como punto sin verificar. Cuanto mejor la evidencia, antes podrá revisarse y pasar a punto confiable.
       </p>
 
       <input className={input} placeholder="Organización responsable *" value={form.nombre} onChange={set("nombre")} />

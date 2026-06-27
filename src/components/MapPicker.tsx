@@ -46,7 +46,7 @@ export default function MapPicker({
     <div
       role="region"
       aria-label="Seleccionar ubicación del centro"
-      className="relative h-72 w-full overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-inner"
+      className="relative h-[26rem] w-full overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-inner"
     >
       <MapContainer center={value ?? ME} zoom={14} scrollWheelZoom={false} className="h-full w-full">
         <MapReady mapRef={mapRef} />
