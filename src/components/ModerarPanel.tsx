@@ -28,6 +28,7 @@ export default function ModerarPanel() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditFormState | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [contactos, setContactos] = useState<{ id: string; nombre: string; email: string; asunto: string; mensaje: string; created_at: string }[]>([]);
 
   const showMsg = useCallback((text: string) => {
     setMsg(text);
@@ -44,6 +45,11 @@ export default function ModerarPanel() {
       .in("estado", ["pendiente", "caducado", "verificado", "cerrado"])
       .order("created_at", { ascending: false });
     setCentros((data ?? []) as Centro[]);
+    const { data: msgs } = await supabase
+      .from("contactos")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setContactos(msgs ?? []);
   }, [supabase]);
 
   useEffect(() => {
@@ -264,6 +270,35 @@ export default function ModerarPanel() {
           );
         })}
         {centros.length === 0 && <p className="text-stone-400 text-sm text-center py-10">No hay centros todavía.</p>}
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-lg font-extrabold">Mensajes de contacto</h2>
+        <p className="text-stone-500 text-[12px] mt-1">{contactos.length} mensaje{contactos.length !== 1 ? "s" : ""}</p>
+        <div className="space-y-3 mt-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+          {contactos.map((m) => (
+            <div key={m.id} className="bg-white border border-stone-200 rounded-2xl p-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">{m.asunto}</span>
+                <span className="text-[10.5px] text-stone-400">{new Date(m.created_at).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+              </div>
+              <h3 className="font-bold text-[14px] mt-2">{m.nombre}</h3>
+              <a href={`mailto:${m.email}`} className="text-[12px] text-sky-700 underline">{m.email}</a>
+              <p className="mt-2 text-[13px] text-stone-700 leading-relaxed whitespace-pre-wrap">{m.mensaje}</p>
+              <button
+                onClick={async () => {
+                  await supabase.from("contactos").delete().eq("id", m.id);
+                  setContactos((prev) => prev.filter((x) => x.id !== m.id));
+                  showMsg("Mensaje eliminado");
+                }}
+                className="mt-3 text-[12px] font-semibold text-rose-600"
+              >
+                Eliminar
+              </button>
+            </div>
+          ))}
+          {contactos.length === 0 && <p className="text-stone-400 text-sm text-center py-6">No hay mensajes de contacto.</p>}
+        </div>
       </div>
 
       {msg && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[12.5px] px-4 py-2 rounded-full">{msg}</div>}
