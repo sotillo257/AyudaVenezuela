@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Heart, MapPin, Plus, Map as MapIcon, List, Clock, ChevronRight,
-  Navigation, Share2, AlertTriangle, CheckCircle2, Ban, Link2, History, Copy,
+  Navigation, Share2, AlertTriangle, CheckCircle2, Ban, Link2, History, Copy, Mail,
 } from "lucide-react";
 import type { Centro } from "@/lib/types";
 import {
@@ -276,7 +276,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
               <div className="flex items-center gap-1.5 text-[18px] font-extrabold tracking-tight lg:text-[24px]">
-                <Heart size={18} className="fill-emerald-600 text-emerald-600 lg:h-5 lg:w-5" /> Ayuda Venezuela
+                <Heart size={18} className="fill-emerald-600 text-emerald-600 lg:h-5 lg:w-5" /> Acopios Venezuela
               </div>
               <div className="mt-0.5 flex items-center gap-1 text-[11px] text-stone-500 lg:text-[13px]">
                 <MapPin size={11} className="lg:h-3.5 lg:w-3.5" />
@@ -301,6 +301,9 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
             <div className="flex items-center gap-2 lg:flex-col lg:items-end lg:gap-3">
               <Link href="/anadir" className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 lg:px-4 lg:py-2 lg:text-[13px]">
                 <Plus size={13} /> Añadir
+              </Link>
+              <Link href="/contacto" className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1.5 text-[12px] font-semibold text-stone-600 lg:px-4 lg:py-2 lg:text-[13px]">
+                <Mail size={13} /> Contacto
               </Link>
               <div className="hidden items-center gap-1 rounded-2xl border border-stone-200 bg-stone-100/80 p-1 lg:flex">
                 {([

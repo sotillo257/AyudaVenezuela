@@ -1,7 +1,7 @@
 import Link from "next/link";
 import AddCenterForm from "@/components/AddCenterForm";
 
-export const metadata = { title: "Proponer un centro · Ayuda Venezuela" };
+export const metadata = { title: "Proponer un centro · Acopios Venezuela" };
 
 export default function AnadirPage() {
   return (

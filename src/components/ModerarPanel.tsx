@@ -275,7 +275,7 @@ function Wrap({ children }: { children: React.ReactNode }) {
   return (
     <main className="max-w-md lg:max-w-5xl mx-auto min-h-screen bg-stone-50">
       <div className="bg-white border-b border-stone-200 px-5 py-3 lg:px-8 lg:py-4 flex items-center justify-between">
-        <h1 className="font-extrabold text-[16px] lg:text-[20px]">Ayuda Venezuela · Moderar</h1>
+        <h1 className="font-extrabold text-[16px] lg:text-[20px]">Acopios Venezuela · Moderar</h1>
         <Link href="/" className="text-stone-400 text-sm lg:text-base">Mapa</Link>
       </div>
       <div className="px-5 py-5 lg:px-8 lg:py-7">{children}</div>
