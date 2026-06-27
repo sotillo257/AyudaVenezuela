@@ -25,7 +25,7 @@ html, body {
 
 @media (min-width: 1024px) {
     .lg\:h-11 {
-        height: auto;
+        height: auto !important;
         width: 500px !important;
         max-width: 500px !important;
     }
