@@ -22,7 +22,7 @@ html, body {
     height: auto;
     width: 100% !important;
 }
-
+/*Versión movil*/
 @media (max-width: 1023px) {
   .flex.items-center.gap-2.lg\:flex-col.lg\:items-end.lg\:gap-3 {
     display: flex;
@@ -32,18 +32,22 @@ html, body {
     justify-content: center;
     align-items: center;
   }
+  /*Boton añadir*/
   a.inline-flex.items-center.gap-1.rounded-full.bg-emerald-50.px-3.py-1\.5.text-\[12px\].font-semibold.text-emerald-700.lg\:px-4.lg\:py-2.lg\:text-\[13px\] {
     font-size: 20px !important;
     font-weight: bold;
     background-color: #cfffd7;
+    color: #047857;
   }
+  /*Boton contacto*/
   a.inline-flex.items-center.gap-1.rounded-full.bg-stone-100.px-3.py-1\.5.text-\[12px\].font-semibold.text-stone-600.lg\:px-4.lg\:py-2.lg\:text-\[13px\] {
     font-size: 20px !important;
     font-weight: bold;
-    background-color: #57534e;
+    background-color: #878787c4;
+    color: #ffffff;
   }
 }
-
+/*Versión escritorio*/
 @media (min-width: 1024px) {
     .lg\:h-11 {
         height: auto !important;
