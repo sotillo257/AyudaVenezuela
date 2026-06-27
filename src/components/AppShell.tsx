@@ -125,11 +125,16 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
     setFilters((f) => (f.includes(c) ? f.filter((x) => x !== c) : [...f, c]));
 
   const list = useMemo(() => {
+    const estadoFilters = filters.filter((f) => f === "Confirmado");
+    const categoryFilters = filters.filter((f) => f !== "Confirmado");
     return [...centros]
-      .filter((c) =>
-        filters.length === 0 ||
-        filters.some((f) => c.acepta.some((a) => a.toLowerCase().includes(f.toLowerCase())))
-      )
+      .filter((c) => {
+        if (estadoFilters.length > 0 && c.estado !== "verificado") return false;
+        if (categoryFilters.length > 0 &&
+          !categoryFilters.some((f) => c.acepta.some((a) => a.toLowerCase().includes(f.toLowerCase())))
+        ) return false;
+        return true;
+      })
       .sort((a, b) => (a.distancia_m ?? 1e12) - (b.distancia_m ?? 1e12));
   }, [centros, filters]);
 
@@ -156,7 +161,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
       ? "absolute top-3 left-0 right-0 z-[500] px-3 flex gap-1.5 overflow-x-auto no-sb lg:top-4 lg:px-4"
       : "flex gap-1.5 overflow-x-auto no-sb pb-2"}
     >
-      {CATEGORIAS.map((c) => {
+      {["Confirmado", ...CATEGORIAS].map((c) => {
         const active = filters.includes(c);
         return (
           <button
@@ -275,7 +280,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
               </div>
               <div className="mt-0.5 flex items-center gap-1 text-[11px] text-stone-500 lg:text-[13px]">
                 <MapPin size={11} className="lg:h-3.5 lg:w-3.5" />
-                {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"} · {verifiedCount} puntos confiables
+                {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"} · {centros.length} centros disponibles
               </div>
               <button
                 onClick={() => locateUser(true)}
