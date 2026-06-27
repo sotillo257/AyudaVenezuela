@@ -23,6 +23,25 @@ html, body {
     width: 100% !important;
 }
 
+@media (min-width: 1024px) {
+    .lg\:h-11 {
+        height: auto;
+        width: 500px !important;
+        max-width: 500px !important;
+    }
+    a.inline-flex.items-center.gap-1.rounded-full.bg-emerald-50.px-3.py-1\.5.text-\[12px\].font-semibold.text-emerald-700.lg\:px-4.lg\:py-2.lg\:text-\[13px\] {
+        font-size: 20px !important;
+        font-weight: bold;
+        background-color: #cfffd7;
+    }
+  button.mt-2.inline-flex.items-center.gap-1.text-\[11px\].font-semibold.text-sky-700.disabled\:text-stone-400.lg\:text-\[12\.5px\] {
+    padding: 10px 20px;
+    border: solid 1px #26859f;
+    border-radius: 20px;
+    margin: 20px 0px;
+}
+}
+
 /* ocultar scrollbars de las tiras de filtros */
 .no-sb::-webkit-scrollbar { display: none; }
 .no-sb { scrollbar-width: none; }
