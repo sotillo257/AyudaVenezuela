@@ -27,19 +27,43 @@ describe("AddCenterForm", () => {
     rpcMock.mockResolvedValue({ error: null });
   });
 
-  it("explains that new points appear immediately as unverified and keeps that message after submit", async () => {
+  it("pide identidad del proponente, aclara privacidad y envía esos datos para validación interna", async () => {
     const user = userEvent.setup();
     render(<AddCenterForm />);
 
     expect(screen.getByText(/se publica al instante como punto sin verificar/i)).toBeInTheDocument();
+    expect(screen.getByText(/no se mostrarán públicamente/i)).toBeInTheDocument();
 
     await user.type(screen.getByPlaceholderText(/organización responsable/i), "Punto Vecinal");
+    await user.type(screen.getByPlaceholderText(/persona responsable del centro/i), "María Pérez");
+    await user.type(screen.getByPlaceholderText(/tu nombre/i), "Jesús");
+    await user.type(screen.getByPlaceholderText(/tu apellido/i), "Sotillo");
+    await user.type(screen.getByPlaceholderText(/tu teléfono/i), "+34600111222");
     await user.click(screen.getByRole("button", { name: /marcar ubicación/i }));
     await user.click(screen.getByRole("button", { name: /enviar a revisión/i }));
+
+    await waitFor(() => {
+      expect(rpcMock).toHaveBeenCalledWith("proponer_centro", expect.objectContaining({
+        p_nombre: "Punto Vecinal",
+        p_responsable: "Responsable del centro: María Pérez | Propuesto por: Jesús Sotillo · Tel: +34600111222",
+      }));
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/ya aparece en el mapa como punto sin verificar/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/un moderador lo revisará/i)).toBeInTheDocument();
+  });
+
+  it("bloquea el envío si faltan los datos de identificación del proponente", async () => {
+    const user = userEvent.setup();
+    render(<AddCenterForm />);
+
+    await user.type(screen.getByPlaceholderText(/organización responsable/i), "Punto Vecinal");
+    await user.click(screen.getByRole("button", { name: /marcar ubicación/i }));
+    await user.click(screen.getByRole("button", { name: /enviar a revisión/i }));
+
+    expect(screen.getByText(/necesitamos nombre, apellido y teléfono/i)).toBeInTheDocument();
+    expect(rpcMock).not.toHaveBeenCalled();
   });
 });

@@ -25,6 +25,7 @@ export default function AddCenterForm() {
   const [form, setForm] = useState({
     nombre: "", operador: "asociacion" as Operador, direccion: "", area: "",
     contacto: "", fuente_url: "", responsable: "",
+    proponenteNombre: "", proponenteApellido: "", proponenteTelefono: "",
   });
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -33,11 +34,22 @@ export default function AddCenterForm() {
   async function submit() {
     setErr(null);
     if (!form.nombre || !pos) { setErr("Indica al menos el nombre y la ubicación en el mapa."); return; }
+    if (!form.proponenteNombre.trim() || !form.proponenteApellido.trim() || !form.proponenteTelefono.trim()) {
+      setErr("Necesitamos nombre, apellido y teléfono de quien propone el centro para poder validarlo.");
+      return;
+    }
+
+    const proponente = `${form.proponenteNombre.trim()} ${form.proponenteApellido.trim()} · Tel: ${form.proponenteTelefono.trim()}`;
+    const responsableInterno = [
+      form.responsable.trim() ? `Responsable del centro: ${form.responsable.trim()}` : null,
+      `Propuesto por: ${proponente}`,
+    ].filter(Boolean).join(" | ");
+
     setBusy(true);
     const { error } = await supabase.rpc("proponer_centro", {
       p_nombre: form.nombre, p_operador: form.operador, p_lat: pos[0], p_lon: pos[1],
       p_direccion: form.direccion, p_area: form.area, p_contacto: form.contacto,
-      p_acepta: acepta, p_fuente_url: form.fuente_url, p_responsable: form.responsable,
+      p_acepta: acepta, p_fuente_url: form.fuente_url, p_responsable: responsableInterno,
     });
     setBusy(false);
     if (error) { setErr(error.message); return; }
@@ -65,6 +77,11 @@ export default function AddCenterForm() {
         Se publica al instante como punto sin verificar. Cuanto mejor la evidencia, antes podrá revisarse y pasar a punto confiable.
       </p>
 
+      <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-[12.5px] leading-relaxed text-sky-900">
+        <b>Validación del centro:</b> necesitamos el nombre, apellido y teléfono de quien lo propone.
+        Estos datos <b>no se mostrarán públicamente</b>; se usarán solo para validar el centro si hace falta contactarte.
+      </div>
+
       <input className={input} placeholder="Organización responsable *" value={form.nombre} onChange={set("nombre")} />
 
       <select className={input} value={form.operador} onChange={set("operador")}>
@@ -73,9 +90,15 @@ export default function AddCenterForm() {
 
       <input className={input} placeholder="Dirección" value={form.direccion} onChange={set("direccion")} />
       <input className={input} placeholder="Zona / ciudad (ej. Caracas)" value={form.area} onChange={set("area")} />
-      <input className={input} placeholder="Contacto (teléfono / email)" value={form.contacto} onChange={set("contacto")} />
+      <input className={input} placeholder="Contacto público del centro (teléfono / email)" value={form.contacto} onChange={set("contacto")} />
       <input className={input} placeholder="Enlace público de evidencia (URL)" value={form.fuente_url} onChange={set("fuente_url")} />
-      <input className={input} placeholder="Persona responsable" value={form.responsable} onChange={set("responsable")} />
+      <input className={input} placeholder="Persona responsable del centro" value={form.responsable} onChange={set("responsable")} />
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <input className={input} placeholder="Tu nombre *" value={form.proponenteNombre} onChange={set("proponenteNombre")} />
+        <input className={input} placeholder="Tu apellido *" value={form.proponenteApellido} onChange={set("proponenteApellido")} />
+      </div>
+      <input className={input} placeholder="Tu teléfono *" value={form.proponenteTelefono} onChange={set("proponenteTelefono")} />
 
       <div>
         <p className="text-[12px] font-semibold text-stone-600 mb-1.5">¿Qué acepta?</p>
