@@ -39,17 +39,14 @@ export default function AddCenterForm() {
       return;
     }
 
-    const proponente = `${form.proponenteNombre.trim()} ${form.proponenteApellido.trim()} · Tel: ${form.proponenteTelefono.trim()}`;
-    const responsableInterno = [
-      form.responsable.trim() ? `Responsable del centro: ${form.responsable.trim()}` : null,
-      `Propuesto por: ${proponente}`,
-    ].filter(Boolean).join(" | ");
-
     setBusy(true);
     const { error } = await supabase.rpc("proponer_centro", {
       p_nombre: form.nombre, p_operador: form.operador, p_lat: pos[0], p_lon: pos[1],
       p_direccion: form.direccion, p_area: form.area, p_contacto: form.contacto,
-      p_acepta: acepta, p_fuente_url: form.fuente_url, p_responsable: responsableInterno,
+      p_acepta: acepta, p_fuente_url: form.fuente_url, p_responsable: form.responsable,
+      p_proponente_nombre: form.proponenteNombre.trim(),
+      p_proponente_apellido: form.proponenteApellido.trim(),
+      p_proponente_telefono: form.proponenteTelefono.trim(),
     });
     setBusy(false);
     if (error) { setErr(error.message); return; }

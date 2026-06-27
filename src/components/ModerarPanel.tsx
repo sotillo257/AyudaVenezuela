@@ -234,6 +234,13 @@ export default function ModerarPanel() {
                   <h3 className="font-bold text-[15px] mt-1.5">{c.nombre}</h3>
                   <p className="text-[11.5px] text-stone-500">{OPERADOR_LABEL[c.operador]} · {c.area ?? "Sin zona"}</p>
                   <p className="text-[11px] text-stone-400 mt-1">{f.text} · acepta: {c.acepta.join(", ") || "—"}</p>
+                  {(c.proponente_nombre || c.proponente_apellido || c.proponente_telefono) && (
+                    <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11.5px] text-amber-900">
+                      <span className="font-bold">Propuesto por:</span>{" "}
+                      {[c.proponente_nombre, c.proponente_apellido].filter(Boolean).join(" ")}
+                      {c.proponente_telefono && <> · Tel: {c.proponente_telefono}</>}
+                    </div>
+                  )}
                   {c.fuente_url && (
                     <a href={c.fuente_url} target="_blank" rel="noreferrer" className="text-[12px] text-sky-700 underline break-all">{c.fuente_url}</a>
                   )}
