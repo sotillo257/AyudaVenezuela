@@ -275,9 +275,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
         <header className="border-b border-stone-200 bg-white px-[18px] pb-4 pt-4 z-30 lg:px-7 lg:pb-5 lg:pt-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
-              <div className="flex items-center gap-1.5 text-[18px] font-extrabold tracking-tight lg:text-[24px]">
-                <Heart size={18} className="fill-emerald-600 text-emerald-600 lg:h-5 lg:w-5" /> Acopios Venezuela
-              </div>
+              <img src="/logo.svg" alt="AcopiosVenezuela.com" className="h-9 w-auto lg:h-11" />
               <div className="mt-0.5 flex items-center gap-1 text-[11px] text-stone-500 lg:text-[13px]">
                 <MapPin size={11} className="lg:h-3.5 lg:w-3.5" />
                 {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"} · {centros.length} centros disponibles
