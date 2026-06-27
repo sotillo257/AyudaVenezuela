@@ -24,4 +24,7 @@ export interface Centro {
   ultima_verificacion: string | null;
   created_at: string;
   distancia_m?: number;
+  proponente_nombre: string | null;
+  proponente_apellido: string | null;
+  proponente_telefono: string | null;
 }
