@@ -270,7 +270,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
 
   return (
     <div className="min-h-[100dvh] bg-stone-200 lg:p-4 xl:p-6">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1440px] flex-col overflow-hidden bg-stone-50 shadow-xl shadow-stone-300/40 lg:min-h-[calc(100dvh-2rem)] lg:rounded-[30px] lg:border lg:border-stone-300/70 lg:shadow-2xl lg:shadow-stone-400/20 xl:min-h-[calc(100dvh-3rem)]">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1440px] flex-col overflow-hidden bg-stone-50 shadow-xl shadow-stone-300/40 lg:h-[calc(100dvh-2rem)] lg:min-h-0 lg:rounded-[30px] lg:border lg:border-stone-300/70 lg:shadow-2xl lg:shadow-stone-400/20 xl:h-[calc(100dvh-3rem)]">
 
         <header className="border-b border-stone-200 bg-white px-[18px] pb-4 pt-4 z-30 lg:px-7 lg:pb-5 lg:pt-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -327,10 +327,10 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
           </div>
         </header>
 
-        <div data-testid="mobile-shell-body" className="relative flex flex-1 flex-col overflow-hidden lg:grid lg:grid-cols-[440px_minmax(0,1fr)] lg:bg-stone-100/60">
+        <div data-testid="mobile-shell-body" className="relative flex min-h-0 flex-1 flex-col overflow-hidden lg:grid lg:grid-cols-[440px_minmax(0,1fr)] lg:bg-stone-100/60">
           {isDesktop && (
-            <aside className="hidden border-r border-stone-200 bg-stone-50 lg:flex lg:min-h-0 lg:flex-col">
-              <div className="flex-1 overflow-y-auto px-5 py-5 xl:px-6">
+            <aside className="hidden overflow-hidden border-r border-stone-200 bg-stone-50 lg:flex lg:min-h-0 lg:flex-col">
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 xl:px-6">
                 <div className="space-y-4">
                   {tab === "donar" ? donationContent(true) : listContent(true)}
                 </div>
