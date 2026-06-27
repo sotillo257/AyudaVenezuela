@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Heart, MapPin, Plus, Map as MapIcon, List, Clock, ChevronRight,
-  Navigation, Share2, AlertTriangle, X, CheckCircle2, Ban, Link2, History, Copy,
+  Navigation, Share2, AlertTriangle, CheckCircle2, Ban, Link2, History, Copy,
 } from "lucide-react";
 import type { Centro } from "@/lib/types";
 import {
@@ -35,6 +35,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
   const [toast, setToast] = useState<string | null>(null);
   const [locationStatus, setLocationStatus] = useState<LocationStatus>("idle");
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(null), 1900); };
 
@@ -104,6 +105,22 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
     locateUser(false);
   }, [locateUser]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+
+    const media = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setIsDesktop(media.matches);
+    sync();
+
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", sync);
+      return () => media.removeEventListener("change", sync);
+    }
+
+    media.addListener(sync);
+    return () => media.removeListener(sync);
+  }, []);
+
   const toggle = (c: string) =>
     setFilters((f) => (f.includes(c) ? f.filter((x) => x !== c) : [...f, c]));
 
@@ -118,14 +135,14 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
 
   const verifiedCount = centros.filter((c) => c.estado === "verificado").length;
 
-  // Qué donar ahora: agrega lo que piden los centros activos
   const demand = useMemo(() => {
     const d: Record<string, number> = {};
     centros.forEach((c) => c.acepta.forEach((a) => { d[a] = (d[a] || 0) + 1; }));
     return Object.entries(d).sort((a, b) => b[1] - a[1]);
   }, [centros]);
+
   const maxDemand = demand[0]?.[1] ?? 1;
-  const bottomNavHeightClass = "pb-[calc(6rem+env(safe-area-inset-bottom,0px))]";
+  const bottomNavHeightClass = "pb-[calc(6rem+env(safe-area-inset-bottom,0px))] lg:pb-6";
 
   async function sendReport(motivo: string) {
     if (!reporting) return;
@@ -134,153 +151,229 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
     flash("Gracias. Pasa a revisión del equipo.");
   }
 
-  return (
-    <div className="min-h-[100dvh] bg-stone-200 flex justify-center">
-      <div className="w-full max-w-md bg-stone-50 min-h-[100dvh] relative flex flex-col overflow-hidden shadow-xl shadow-stone-300/40">
+  const filtersBar = (variant: "overlay" | "panel") => (
+    <div className={variant === "overlay"
+      ? "absolute top-3 left-0 right-0 z-[500] px-3 flex gap-1.5 overflow-x-auto no-sb lg:top-4 lg:px-4"
+      : "flex gap-1.5 overflow-x-auto no-sb pb-2"}
+    >
+      {CATEGORIAS.map((c) => {
+        const active = filters.includes(c);
+        return (
+          <button
+            key={c}
+            onClick={() => toggle(c)}
+            className={variant === "overlay"
+              ? `shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium shadow-sm backdrop-blur ${active ? "bg-stone-900 text-white" : "bg-white/95 text-stone-600"}`
+              : `shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-medium ${active ? "border-stone-900 bg-stone-900 text-white" : "border-stone-200 bg-white text-stone-600"}`}
+          >
+            {c}
+          </button>
+        );
+      })}
+    </div>
+  );
 
-        {/* Header */}
-        <header className="bg-white border-b border-stone-200 px-[18px] pt-4 pb-3 z-30">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-1.5 font-extrabold text-[18px] tracking-tight">
-                <Heart size={17} className="text-emerald-600 fill-emerald-600" /> Ayuda Venezuela
+  const listContent = (compact = false) => (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[19px] font-extrabold text-stone-900 lg:text-[22px]">
+            {compact ? "Centros cercanos y verificados" : "Centros disponibles"}
+          </h2>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-stone-500 lg:text-[13px]">
+            {compact
+              ? "En escritorio ves el mapa y la lista al mismo tiempo para comparar direcciones y distancia sin cambiar de pantalla."
+              : "Ordenados por cercanía y filtrados según lo que necesitas donar ahora mismo."}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-right shadow-sm">
+          <p className="text-[10.5px] font-semibold uppercase tracking-wide text-emerald-700">Confiables</p>
+          <p className="text-[22px] font-extrabold leading-none text-emerald-800">{verifiedCount}</p>
+        </div>
+      </div>
+
+      <div className="mt-4">{filtersBar("panel")}</div>
+
+      {list.length === 0 && (
+        <p className="rounded-2xl bg-white px-6 py-12 text-center text-sm text-stone-500 shadow-sm ring-1 ring-stone-200">
+          No hay centros con esos filtros. Quita alguno o propón uno nuevo con “Añadir”.
+        </p>
+      )}
+
+      <div className={compact ? "space-y-3" : "grid gap-3 lg:grid-cols-2"}>
+        {list.map((c) => {
+          const f = freshness(c.ultima_verificacion);
+          const s = STATUS[c.estado];
+          return (
+            <button key={c.id} onClick={() => setSelected(c)}
+              className="w-full rounded-2xl border border-stone-200 bg-white p-3.5 text-left shadow-sm transition hover:border-stone-300 hover:shadow-md active:scale-[0.99]">
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold ${s.pill}`}>
+                <CheckCircle2 size={11} /> {s.label}
+              </span>
+              <div className="mt-1.5 flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="truncate text-[15px] font-bold leading-tight">{c.nombre}</h3>
+                  <p className="mt-0.5 text-[11.5px] text-stone-500">
+                    {OPERADOR_LABEL[c.operador]} · {c.area}{km(c.distancia_m) ? ` · ${km(c.distancia_m)}` : ""}
+                  </p>
+                </div>
+                <ChevronRight size={18} className="mt-1 shrink-0 text-stone-300" />
               </div>
-              <div className="text-[11px] text-stone-500 flex items-center gap-1 mt-0.5">
-                <MapPin size={11} /> {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"} · {verifiedCount} puntos confiables
+              {c.acepta.length > 0 && (
+                <div className="mt-2.5 flex flex-wrap gap-1">
+                  {c.acepta.map((a) => (
+                    <span key={a} className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] text-stone-700">{a}</span>
+                  ))}
+                </div>
+              )}
+              <div className={`mt-2.5 flex items-center gap-1 text-[11px] ${f.cls}`}>
+                <Clock size={11} /> {f.text}
+                {!f.expired && f.left != null && <span className="text-stone-400">· caduca en {f.left} h</span>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+
+  const donationContent = (desktop = false) => (
+    <>
+      <h2 className="text-[19px] font-extrabold lg:text-[22px]">Lo más necesario ahora</h2>
+      <p className="mt-1 text-[12.5px] leading-relaxed text-stone-500 lg:text-[13px]">
+        Priorizado según lo que piden los centros activos cerca de ti — no una lista genérica.
+      </p>
+      <div className={`mt-4 ${desktop ? "grid gap-3 lg:grid-cols-2" : "space-y-2.5"}`}>
+        {demand.map(([cat, n]) => (
+          <div key={cat} className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[14px] font-bold">{cat}</span>
+              <span className="text-[11px] text-stone-500">pedido en {n} {n === 1 ? "centro" : "centros"}</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-stone-100">
+              <div className="h-full rounded-full bg-emerald-500" style={{ width: `${(n / maxDemand) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-[11.5px] leading-relaxed text-amber-800 lg:text-[12px]">
+        Lleva todo <b>sellado y etiquetado</b>. Las medicinas, solo en su envase original con fecha visible.
+        Confirma el horario en la ficha antes de salir.
+      </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-[100dvh] bg-stone-200 lg:p-4 xl:p-6">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1440px] flex-col overflow-hidden bg-stone-50 shadow-xl shadow-stone-300/40 lg:min-h-[calc(100dvh-2rem)] lg:rounded-[30px] lg:border lg:border-stone-300/70 lg:shadow-2xl lg:shadow-stone-400/20 xl:min-h-[calc(100dvh-3rem)]">
+
+        <header className="border-b border-stone-200 bg-white px-[18px] pb-4 pt-4 z-30 lg:px-7 lg:pb-5 lg:pt-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-1.5 text-[18px] font-extrabold tracking-tight lg:text-[24px]">
+                <Heart size={18} className="fill-emerald-600 text-emerald-600 lg:h-5 lg:w-5" /> Ayuda Venezuela
+              </div>
+              <div className="mt-0.5 flex items-center gap-1 text-[11px] text-stone-500 lg:text-[13px]">
+                <MapPin size={11} className="lg:h-3.5 lg:w-3.5" />
+                {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"} · {verifiedCount} puntos confiables
               </div>
               <button
                 onClick={() => locateUser(true)}
                 disabled={locationStatus === "locating"}
-                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 disabled:text-stone-400"
+                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 disabled:text-stone-400 lg:text-[12.5px]"
               >
                 <Navigation size={12} /> {locationStatus === "locating" ? "Detectando ubicación…" : userPos ? "Actualizar mi ubicación" : "Usar mi ubicación real"}
               </button>
               {locationMessage && (
-                <p className={`mt-1 max-w-[250px] text-[10.5px] leading-snug ${
+                <p className={`mt-1 max-w-[540px] text-[10.5px] leading-snug lg:text-[12px] ${
                   locationStatus === "ready" ? "text-emerald-700" : locationStatus === "insecure" || locationStatus === "denied" ? "text-amber-700" : "text-stone-500"
                 }`}>
                   {locationMessage}
                 </p>
               )}
             </div>
-            <Link href="/anadir" className="flex items-center gap-1 text-[12px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full">
-              <Plus size={13} /> Añadir
-            </Link>
+
+            <div className="flex items-center gap-2 lg:flex-col lg:items-end lg:gap-3">
+              <Link href="/anadir" className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 lg:px-4 lg:py-2 lg:text-[13px]">
+                <Plus size={13} /> Añadir
+              </Link>
+              <div className="hidden items-center gap-1 rounded-2xl border border-stone-200 bg-stone-100/80 p-1 lg:flex">
+                {([
+                  ["mapa", MapIcon, "Mapa"],
+                  ["lista", List, "Centros"],
+                  ["donar", Heart, "Necesidades"],
+                ] as const).map(([k, Icon, label]) => (
+                  <button
+                    key={k}
+                    onClick={() => setTab(k)}
+                    className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[12.5px] font-semibold transition ${
+                      tab === k ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-800"
+                    }`}
+                  >
+                    <Icon size={15} className={tab === k ? "text-emerald-600" : ""} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </header>
 
-        {/* Content */}
-        <div className="flex-1 relative overflow-hidden">
-
-          {/* MAPA */}
-          {tab === "mapa" && (
-            <div className="absolute inset-0">
-              <div className="absolute top-2.5 left-0 right-0 z-[500] px-3 flex gap-1.5 overflow-x-auto no-sb">
-                {CATEGORIAS.map((c) => (
-                  <button key={c} onClick={() => toggle(c)}
-                    className={`shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-full shadow-sm ${
-                      filters.includes(c) ? "bg-stone-900 text-white" : "bg-white text-stone-600"}`}>
-                    {c}
-                  </button>
-                ))}
+        <div data-testid="mobile-shell-body" className="relative flex flex-1 flex-col overflow-hidden lg:grid lg:grid-cols-[440px_minmax(0,1fr)] lg:bg-stone-100/60">
+          {isDesktop && (
+            <aside className="hidden border-r border-stone-200 bg-stone-50 lg:flex lg:min-h-0 lg:flex-col">
+              <div className="flex-1 overflow-y-auto px-5 py-5 xl:px-6">
+                <div className="space-y-4">
+                  {tab === "donar" ? donationContent(true) : listContent(true)}
+                </div>
               </div>
-              <MapView
-                centros={list}
-                userPos={userPos ?? ME}
-                selectedId={selected?.id ?? null}
-                onSelect={(c) => setSelected(c)}
-              />
-            </div>
+            </aside>
           )}
 
-          {/* LISTA */}
-          {tab === "lista" && (
-            <div className={`absolute inset-0 overflow-y-auto px-[14px] py-3 ${bottomNavHeightClass}`}>
-              <div className="flex gap-1.5 overflow-x-auto no-sb pb-2">
-                {CATEGORIAS.map((c) => (
-                  <button key={c} onClick={() => toggle(c)}
-                    className={`shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-full border ${
-                      filters.includes(c) ? "bg-stone-900 text-white border-stone-900" : "bg-white text-stone-600 border-stone-200"}`}>
-                    {c}
-                  </button>
-                ))}
+          <section data-testid="mobile-content-region" className="relative min-h-0 flex-1 overflow-hidden bg-stone-200 lg:block">
+            {tab === "mapa" && (
+              <div className="absolute inset-0 lg:hidden">
+                {filtersBar("overlay")}
+                <MapView
+                  centros={list}
+                  userPos={userPos ?? ME}
+                  selectedId={selected?.id ?? null}
+                  onSelect={(c) => setSelected(c)}
+                />
               </div>
-              {list.length === 0 && (
-                <p className="text-center text-stone-500 text-sm py-12 px-6">
-                  No hay centros con esos filtros. Quita alguno o propón uno nuevo con “Añadir”.
-                </p>
-              )}
-              <div className="space-y-3">
-                {list.map((c) => {
-                  const f = freshness(c.ultima_verificacion);
-                  const s = STATUS[c.estado];
-                  return (
-                    <button key={c.id} onClick={() => setSelected(c)}
-                      className="w-full text-left bg-white rounded-2xl border border-stone-200 p-3.5 active:scale-[0.99] transition">
-                      <span className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded-full ${s.pill}`}>
-                        <CheckCircle2 size={11} /> {s.label}
-                      </span>
-                      <div className="flex items-start justify-between gap-2 mt-1.5">
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-[15px] leading-tight truncate">{c.nombre}</h3>
-                          <p className="text-[11.5px] text-stone-500 mt-0.5">
-                            {OPERADOR_LABEL[c.operador]} · {c.area}{km(c.distancia_m) ? ` · ${km(c.distancia_m)}` : ""}
-                          </p>
-                        </div>
-                        <ChevronRight size={18} className="text-stone-300 shrink-0 mt-1" />
-                      </div>
-                      {c.acepta.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2.5">
-                          {c.acepta.map((a) => (
-                            <span key={a} className="text-[11px] bg-stone-100 text-stone-700 px-2 py-0.5 rounded-md">{a}</span>
-                          ))}
-                        </div>
-                      )}
-                      <div className={`flex items-center gap-1 mt-2.5 text-[11px] ${f.cls}`}>
-                        <Clock size={11} /> {f.text}
-                        {!f.expired && f.left != null && <span className="text-stone-400">· caduca en {f.left} h</span>}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* DONAR */}
-          {tab === "donar" && (
-            <div className={`absolute inset-0 overflow-y-auto px-[18px] py-5 ${bottomNavHeightClass}`}>
-              <h2 className="text-[19px] font-extrabold">Lo más necesario ahora</h2>
-              <p className="text-[12.5px] text-stone-500 mt-1 leading-relaxed">
-                Priorizado según lo que piden los centros activos cerca de ti — no una lista genérica.
-              </p>
-              <div className="space-y-2.5 mt-4">
-                {demand.map(([cat, n]) => (
-                  <div key={cat} className="bg-white rounded-2xl border border-stone-200 p-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-[14px]">{cat}</span>
-                      <span className="text-[11px] text-stone-500">pedido en {n} {n === 1 ? "centro" : "centros"}</span>
-                    </div>
-                    <div className="h-2 bg-stone-100 rounded-full mt-2 overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(n / maxDemand) * 100}%` }} />
-                    </div>
-                  </div>
-                ))}
+            {tab === "lista" && (
+              <div className={`absolute inset-0 overflow-y-auto px-[14px] py-3 lg:hidden ${bottomNavHeightClass}`}>
+                {listContent(false)}
               </div>
-              <div className="mt-5 text-[11.5px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3 leading-relaxed">
-                Lleva todo <b>sellado y etiquetado</b>. Las medicinas, solo en su envase original con fecha visible.
-                Confirma el horario en la ficha antes de salir.
+            )}
+
+            {tab === "donar" && (
+              <div className={`absolute inset-0 overflow-y-auto px-[18px] py-5 lg:hidden ${bottomNavHeightClass}`}>
+                {donationContent(false)}
               </div>
-            </div>
-          )}
+            )}
+
+            {isDesktop && (
+              <div className="hidden h-full lg:block">
+                {filtersBar("overlay")}
+                <MapView
+                  centros={list}
+                  userPos={userPos ?? ME}
+                  selectedId={selected?.id ?? null}
+                  onSelect={(c) => setSelected(c)}
+                />
+              </div>
+            )}
+          </section>
         </div>
 
-        {/* Bottom nav */}
-        <nav className="sticky bottom-0 z-30 flex border-t border-stone-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] shadow-[0_-6px_18px_rgba(0,0,0,0.06)]">
+        <nav className="sticky bottom-0 z-30 flex border-t border-stone-200 bg-white/95 pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] shadow-[0_-6px_18px_rgba(0,0,0,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/85 lg:hidden">
           {([["mapa", MapIcon, "Mapa"], ["lista", List, "Lista"], ["donar", Heart, "Qué donar"]] as const).map(
             ([k, Icon, label]) => (
               <button key={k} onClick={() => setTab(k)}
-                className={`flex-1 flex flex-col items-center justify-center gap-0.5 px-2 pt-2.5 pb-2 text-[10.5px] font-medium ${
+                className={`flex flex-1 flex-col items-center justify-center gap-0.5 px-2 pb-2 pt-2.5 text-[10.5px] font-medium ${
                   tab === k ? "text-stone-900" : "text-stone-400"}`}>
                 <Icon size={20} className={tab === k ? "text-emerald-600" : ""} /> {label}
               </button>
@@ -288,7 +381,6 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
           )}
         </nav>
 
-        {/* Ficha (sheet) */}
         {selected && (
           <Sheet onClose={() => setSelected(null)}>
             <CenterDetail
@@ -299,25 +391,24 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
           </Sheet>
         )}
 
-        {/* Compartir */}
         {sharing && (
           <Sheet onClose={() => setSharing(null)}>
-            <div className="px-5 pb-7 pt-2">
-              <h3 className="text-lg font-extrabold">Compartir por WhatsApp</h3>
+            <div className="px-5 pb-7 pt-2 lg:px-7 lg:pb-8 lg:pt-3">
+              <h3 className="text-lg font-extrabold lg:text-[22px]">Compartir por WhatsApp</h3>
               {(() => {
                 const url = `${SITE}/centro/${sharing.id}`;
                 const txt = `Centro de acopio en ${sharing.area}: ${sharing.nombre}. Recibe ${sharing.acepta.join(", ")}.`;
                 return (
                   <>
-                    <div className="bg-stone-100 rounded-xl p-3 text-[13px] text-stone-700 leading-relaxed mt-3">
+                    <div className="mt-3 rounded-xl bg-stone-100 p-3 text-[13px] leading-relaxed text-stone-700 lg:text-[14px]">
                       {txt} {url}
                     </div>
                     <a href={whatsappText(sharing, url)} target="_blank" rel="noreferrer"
-                      className="mt-3 w-full flex items-center justify-center gap-1.5 bg-[#25D366] text-white font-semibold py-3 rounded-xl text-[14px]">
+                      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#25D366] py-3 text-[14px] font-semibold text-white lg:text-[15px]">
                       <Share2 size={15} /> Abrir WhatsApp
                     </a>
                     <button onClick={() => { navigator.clipboard?.writeText(`${txt} ${url}`).catch(() => {}); flash("Texto copiado"); }}
-                      className="mt-2 w-full flex items-center justify-center gap-1.5 bg-white border border-stone-200 text-stone-700 font-medium py-2.5 rounded-xl text-[13px]">
+                      className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-stone-200 bg-white py-2.5 text-[13px] font-medium text-stone-700 lg:text-[14px]">
                       <Copy size={14} /> Copiar texto
                     </button>
                   </>
@@ -327,21 +418,20 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
           </Sheet>
         )}
 
-        {/* Reportar */}
         {reporting && (
           <Sheet onClose={() => setReporting(null)}>
-            <div className="px-5 pb-7 pt-2">
-              <h3 className="text-lg font-extrabold">¿Qué pasa con este centro?</h3>
-              <p className="text-[12.5px] text-stone-500 mt-1">{reporting.nombre}</p>
-              <div className="space-y-2 mt-4">
+            <div className="px-5 pb-7 pt-2 lg:px-7 lg:pb-8 lg:pt-3">
+              <h3 className="text-lg font-extrabold lg:text-[22px]">¿Qué pasa con este centro?</h3>
+              <p className="mt-1 text-[12.5px] text-stone-500 lg:text-[13.5px]">{reporting.nombre}</p>
+              <div className="mt-4 space-y-2">
                 {["Ya no recibe donaciones", "La dirección u horario son incorrectos", "El contacto no responde", "Creo que no es real"].map((r) => (
                   <button key={r} onClick={() => sendReport(r)}
-                    className="w-full text-left text-[13.5px] bg-white border border-stone-200 px-3.5 py-3 rounded-xl active:bg-stone-50">
+                    className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-3 text-left text-[13.5px] active:bg-stone-50 lg:text-[14px]">
                     {r}
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-stone-400 mt-3">
+              <p className="mt-3 text-[11px] text-stone-400 lg:text-[12px]">
                 No se desmarca un centro solo por reportes. Un moderador revisa y reconfirma antes de cambiar el estado.
               </p>
             </div>
@@ -349,7 +439,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
         )}
 
         {toast && (
-          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-[3000] bg-stone-900 text-white text-[12.5px] px-4 py-2 rounded-full shadow-lg">
+          <div className="absolute bottom-20 left-1/2 z-[3000] -translate-x-1/2 rounded-full bg-stone-900 px-4 py-2 text-[12.5px] text-white shadow-lg lg:bottom-6 lg:right-6 lg:left-auto lg:translate-x-0">
             {toast}
           </div>
         )}
@@ -360,9 +450,9 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
 
 function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="absolute inset-0 z-[2000] bg-black/30 flex items-end" onClick={onClose}>
-      <div className="w-full bg-stone-50 rounded-t-2xl max-h-[92%] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="w-10 h-1 bg-stone-300 rounded-full mx-auto mt-2.5" />
+    <div className="absolute inset-0 z-[2000] flex items-end bg-black/30 lg:items-center lg:justify-center lg:p-6" onClick={onClose}>
+      <div className="max-h-[92%] w-full overflow-y-auto rounded-t-2xl bg-stone-50 lg:max-h-[min(90vh,820px)] lg:max-w-2xl lg:rounded-[28px] lg:shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-stone-300 lg:mt-3" />
         {children}
       </div>
     </div>
@@ -376,34 +466,34 @@ function CenterDetail({ c, onShare, onReport }: { c: Centro; onShare: () => void
     : f.cls.includes("amber") ? "bg-amber-50 text-amber-700 border-amber-200"
     : "bg-emerald-50 text-emerald-700 border-emerald-200";
   return (
-    <div className="px-5 pb-7">
-      <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full mt-3 ${s.pill}`}>
+    <div className="px-5 pb-7 lg:px-7 lg:pb-8">
+      <span className={`mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${s.pill}`}>
         <CheckCircle2 size={12} /> {s.label}
       </span>
-      <h2 className="text-xl font-extrabold leading-tight mt-2">{c.nombre}</h2>
-      <p className="text-[12.5px] text-stone-500 mt-1">
+      <h2 className="mt-2 text-xl font-extrabold leading-tight lg:text-[28px]">{c.nombre}</h2>
+      <p className="mt-1 text-[12.5px] text-stone-500 lg:text-[14px]">
         {OPERADOR_LABEL[c.operador]} · {c.area}{km(c.distancia_m) ? ` · ${km(c.distancia_m)}` : ""}
       </p>
 
-      <div className={`flex items-center gap-2 text-[12px] border rounded-xl px-3 py-2 mt-3 ${fb}`}>
+      <div className={`mt-3 flex items-center gap-2 rounded-xl border px-3 py-2 text-[12px] lg:text-[13px] ${fb}`}>
         <Clock size={13} /> <b>{f.text}.</b>
         {!f.expired && f.left != null && <span>Caduca en {f.left} h si nadie lo reconfirma.</span>}
       </div>
 
       {c.estado === "pendiente" && (
-        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-[12.5px] leading-relaxed text-amber-900">
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-[12.5px] leading-relaxed text-amber-900 lg:text-[13px]">
           <b>Cuidado:</b> no sabemos si este punto es de confianza todavía. Este punto no ha sido verificado.
         </div>
       )}
 
       {c.acepta.length > 0 && (
         <>
-          <p className="text-[10.5px] font-bold uppercase tracking-wide text-stone-400 flex items-center gap-1 mt-4 mb-1.5">
+          <p className="mb-1.5 mt-4 flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-stone-400 lg:text-[11px]">
             <CheckCircle2 size={12} className="text-emerald-600" /> Qué reciben
           </p>
           <div className="flex flex-wrap gap-1.5">
             {c.acepta.map((a) => (
-              <span key={a} className="text-[12px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-md">{a}</span>
+              <span key={a} className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12px] text-emerald-800 lg:text-[13px]">{a}</span>
             ))}
           </div>
         </>
@@ -411,18 +501,18 @@ function CenterDetail({ c, onShare, onReport }: { c: Centro; onShare: () => void
 
       {c.no_acepta.length > 0 && (
         <>
-          <p className="text-[10.5px] font-bold uppercase tracking-wide text-stone-400 flex items-center gap-1 mt-3 mb-1.5">
+          <p className="mb-1.5 mt-3 flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-stone-400 lg:text-[11px]">
             <Ban size={12} className="text-rose-500" /> Qué NO reciben
           </p>
           <div className="flex flex-wrap gap-1.5">
             {c.no_acepta.map((a) => (
-              <span key={a} className="text-[12px] bg-stone-100 text-stone-500 px-2.5 py-1 rounded-md line-through">{a}</span>
+              <span key={a} className="rounded-md bg-stone-100 px-2.5 py-1 text-[12px] text-stone-500 line-through lg:text-[13px]">{a}</span>
             ))}
           </div>
         </>
       )}
 
-      <div className="mt-4 space-y-2.5 text-[13px]">
+      <div className="mt-4 space-y-2.5 text-[13px] lg:text-[14px]">
         <Row label="Horario" value={c.horario} />
         <Row label="Próxima salida a Venezuela" value={c.proxima_salida} />
         <Row label="Contacto" value={c.contacto} />
@@ -430,22 +520,22 @@ function CenterDetail({ c, onShare, onReport }: { c: Centro; onShare: () => void
         {c.fuente_url && <Row label="Fuente" value={c.fuente_url} link />}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mt-5">
+      <div className="mt-5 grid grid-cols-2 gap-2">
         <a href={mapsUrl(c.lat, c.lon)} target="_blank" rel="noreferrer"
-          className="flex items-center justify-center gap-1.5 bg-stone-900 text-white text-[13px] font-semibold py-3 rounded-xl">
+          className="flex items-center justify-center gap-1.5 rounded-xl bg-stone-900 py-3 text-[13px] font-semibold text-white lg:text-[14px]">
           <Navigation size={15} /> Cómo llegar
         </a>
         <button onClick={onShare}
-          className="flex items-center justify-center gap-1.5 bg-[#25D366] text-white text-[13px] font-semibold py-3 rounded-xl">
+          className="flex items-center justify-center gap-1.5 rounded-xl bg-[#25D366] py-3 text-[13px] font-semibold text-white lg:text-[14px]">
           <Share2 size={15} /> WhatsApp
         </button>
       </div>
       <button onClick={onReport}
-        className="w-full mt-2.5 flex items-center justify-center gap-1.5 bg-white border border-rose-200 text-rose-600 text-[13px] font-semibold py-3 rounded-xl">
+        className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white py-3 text-[13px] font-semibold text-rose-600 lg:text-[14px]">
         <AlertTriangle size={15} /> Este centro ya no está activo / info incorrecta
       </button>
 
-      <div className="flex items-start gap-1.5 text-[11px] text-stone-400 mt-4">
+      <div className="mt-4 flex items-start gap-1.5 text-[11px] text-stone-400 lg:text-[12px]">
         <History size={12} className="mt-0.5 shrink-0" />
         <span>El historial de cambios y la fuente quedan registrados para cada centro.</span>
       </div>
@@ -457,14 +547,14 @@ function Row({ label, value, link }: { label: string; value: string | null; link
   if (!value) return null;
   return (
     <div className="flex gap-2.5">
-      <Link2 size={15} className="text-stone-400 mt-0.5 shrink-0" />
+      <Link2 size={15} className="mt-0.5 shrink-0 text-stone-400" />
       <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wide text-stone-400 font-bold">{label}</p>
+        <p className="text-[10px] font-bold uppercase tracking-wide text-stone-400">{label}</p>
         {link ? (
           <a href={value.startsWith("http") ? value : `https://${value}`} target="_blank" rel="noreferrer"
-            className="text-[13px] text-sky-700 underline break-all">{value}</a>
+            className="break-all text-[13px] text-sky-700 underline lg:text-[14px]">{value}</a>
         ) : (
-          <p className="text-[13px] text-stone-700">{value}</p>
+          <p className="text-[13px] text-stone-700 lg:text-[14px]">{value}</p>
         )}
       </div>
     </div>

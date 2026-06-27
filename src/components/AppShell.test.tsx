@@ -98,6 +98,8 @@ describe("AppShell", () => {
 
     expect(screen.getByText(/Cerca de Plaza Venezuela, Caracas/i).parentElement).toHaveTextContent("2 puntos confiables");
     expect(container.firstChild).toHaveClass("min-h-[100dvh]");
+    expect(screen.getByTestId("mobile-content-region")).toHaveClass("flex-1");
+    expect(screen.getByTestId("mobile-shell-body")).toHaveClass("flex");
     const bottomNav = screen.getByRole("navigation");
     expect(bottomNav).toHaveClass("sticky");
     expect(bottomNav.className).toContain("safe-area-inset-bottom");
