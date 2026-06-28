@@ -29,6 +29,13 @@ html, body {
     text-align: center !important;
     margin: 0 12%;
 }
+  /* Fix del Grid */
+  .grid {
+    display: flex;
+    flex-direction: column;
+    align-content: space-between;
+    align-items: center;
+}
   /*Boton de usar ubicación*/
   button.mt-2.inline-flex.items-center.gap-1.text-\[11px\].font-semibold.text-sky-700.disabled\:text-stone-400.lg\:text-\[12\.5px\] {
     font-size: 12px !important;
