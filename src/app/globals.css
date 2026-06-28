@@ -29,13 +29,20 @@ html, body {
     text-align: center !important;
     margin: 0 12%;
 }
+  /* boton como llegar test*/
+  a.flex.items-center.justify-center.gap-1\.5.rounded-xl.bg-stone-900.py-3.text-\[13px\].font-semibold.text-white.lg\:text-\[14px\] {
+    padding: 14px 18px;
+    color: #ffffff;
+}
   /* Fix del Grid */
   .grid {
-    display: flex;
-    flex-direction: column;
-    align-content: space-between;
-    align-items: center;
-}
+        display: flex;
+        flex-direction: row;
+        align-content: space-around;
+        align-items: center;
+        justify-content: space-evenly;
+        padding: 10px 30px;
+    }
   /*Boton de usar ubicación*/
   button.mt-2.inline-flex.items-center.gap-1.text-\[11px\].font-semibold.text-sky-700.disabled\:text-stone-400.lg\:text-\[12\.5px\] {
     font-size: 12px !important;
