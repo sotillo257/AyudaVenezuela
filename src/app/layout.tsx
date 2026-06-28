@@ -7,9 +7,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: "Acopios Venezuela – Centros Verificados",
   description:
-    "Centros de acopio verificados cerca de ti. Mira qué reciben hoy, su horario y cuándo sale la ayuda.",
+    "Centros de acopio subidos por ti y verificados por personas confiables. Mira qué reciben hoy, su horario y cuándo sale la ayuda.",
   openGraph: {
-    title: "Acopios Venezuela – Centros Verificados",
+    title: "Centros de Acopios por Venezuela – Centros Verificados",
     description: "Centros de acopio verificados cerca de ti.",
     type: "website",
   },
