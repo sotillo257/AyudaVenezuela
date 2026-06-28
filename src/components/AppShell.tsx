@@ -538,7 +538,7 @@ function CenterDetail({ c, onShare, onReport }: { c: Centro; onShare: () => void
       </div>
       <button onClick={onReport}
         className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white py-3 text-[13px] font-semibold text-rose-600 lg:text-[14px]">
-        <AlertTriangle size={15} /> Este centro ya no está activo / info incorrecta
+        <AlertTriangle size={15} /> Reportar: Ya no está / info incorrecta / Engañoso.
       </button>
 
       <div className="mt-4 flex items-start gap-1.5 text-[11px] text-stone-400 lg:text-[12px]">
