@@ -35,13 +35,10 @@ html, body {
     color: #ffffff;
 }
   /* Fix del Grid */
-  .grid {
+    .grid {
         display: flex;
-        flex-direction: row;
-        align-content: space-around;
-        align-items: center;
-        justify-content: space-evenly;
         padding: 10px 30px;
+        flex-direction: column;
     }
   /*Boton de usar ubicación*/
   button.mt-2.inline-flex.items-center.gap-1.text-\[11px\].font-semibold.text-sky-700.disabled\:text-stone-400.lg\:text-\[12\.5px\] {
