@@ -22,6 +22,14 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 const NEAREST_RADIUS_M = 20_000_000;
 const YUMMY_DONATION_URL = "https://dona.yummyrides.com/";
 
+function normalizeSearchValue(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 type LocationStatus = "idle" | "locating" | "ready" | "denied" | "unavailable" | "insecure";
 
 export default function AppShell({ initialCentros }: { initialCentros: Centro[]; loadError?: boolean }) {
@@ -30,6 +38,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
   const [centros, setCentros] = useState<Centro[]>(initialCentros);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [filters, setFilters] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [selected, setSelected] = useState<Centro | null>(null);
   const [sharing, setSharing] = useState<Centro | null>(null);
   const [reporting, setReporting] = useState<Centro | null>(null);
@@ -128,16 +137,33 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
   const list = useMemo(() => {
     const estadoFilters = filters.filter((f) => f === "Confirmado");
     const categoryFilters = filters.filter((f) => f !== "Confirmado");
+    const normalizedSearch = normalizeSearchValue(searchTerm);
+
     return [...centros]
       .filter((c) => {
         if (estadoFilters.length > 0 && c.estado !== "verificado") return false;
         if (categoryFilters.length > 0 &&
           !categoryFilters.some((f) => c.acepta.some((a) => a.toLowerCase().includes(f.toLowerCase())))
         ) return false;
+
+        if (normalizedSearch) {
+          const haystack = [c.nombre, c.area, c.direccion]
+            .map((value) => normalizeSearchValue(value))
+            .join(" ");
+
+          if (!haystack.includes(normalizedSearch)) return false;
+        }
+
         return true;
       })
       .sort((a, b) => (a.distancia_m ?? 1e12) - (b.distancia_m ?? 1e12));
-  }, [centros, filters]);
+  }, [centros, filters, searchTerm]);
+
+  useEffect(() => {
+    if (selected && !list.some((centro) => centro.id === selected.id)) {
+      setSelected(null);
+    }
+  }, [list, selected]);
 
   const verifiedCount = centros.filter((c) => c.estado === "verificado").length;
 
@@ -198,11 +224,30 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
         </div>
       </div>
 
+      <div className="mt-4 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+        <label className="block">
+          <span className="text-[12px] font-semibold text-stone-600">Buscar por ciudad o nombre</span>
+          <div className="relative mt-2">
+            <MapPin size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Ej.: Caracas, Madrid o nombre del centro"
+              className="w-full rounded-2xl border border-stone-200 bg-stone-50 py-2.5 pl-9 pr-4 text-[13px] text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white"
+            />
+          </div>
+        </label>
+        <p className="mt-2 text-[11.5px] leading-relaxed text-stone-500">
+          Escribe una ciudad o parte del nombre para mostrar solo los centros que coincidan.
+        </p>
+      </div>
+
       <div className="mt-4">{filtersBar("panel")}</div>
 
       {list.length === 0 && (
         <p className="rounded-2xl bg-white px-6 py-12 text-center text-sm text-stone-500 shadow-sm ring-1 ring-stone-200">
-          No hay centros con esos filtros. Quita alguno o propón uno nuevo con “Añadir”.
+          No hay centros con esos filtros o esa búsqueda. Cambia la ciudad, el nombre o propón uno nuevo con “Añadir”.
         </p>
       )}
 

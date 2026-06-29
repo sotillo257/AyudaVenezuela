@@ -113,6 +113,8 @@ describe("AppShell", () => {
     expect(bottomNav.className).toContain("safe-area-inset-bottom");
     await user.click(screen.getByRole("button", { name: /lista/i }));
 
+    expect(screen.getByPlaceholderText(/caracas, madrid o nombre del centro/i)).toBeInTheDocument();
+
     const pendingCard = screen.getByRole("button", { name: /centro comunitario nuevo/i });
     expect(pendingCard).toHaveTextContent("Centro Comunitario Nuevo");
     expect(screen.getByText(/punto sin verificar/i)).toBeInTheDocument();
@@ -127,6 +129,40 @@ describe("AppShell", () => {
     const donationPanel = screen.getByText("Lo más necesario ahora").closest("div")!;
     expect(donationPanel.className).toContain("safe-area-inset-bottom");
     expect(within(donationPanel).getByText("Agua")).toBeInTheDocument();
+  });
+
+  it("filters the center list by city or center name", async () => {
+    const user = userEvent.setup();
+    render(<AppShell initialCentros={centros} />);
+
+    await user.click(screen.getByRole("button", { name: /lista/i }));
+
+    const searchInput = screen.getByPlaceholderText(/caracas, madrid o nombre del centro/i);
+    await user.type(searchInput, "barcelona");
+
+    expect(screen.getByText("Centro Higiene")).toBeInTheDocument();
+    expect(screen.queryByText("Centro Agua")).not.toBeInTheDocument();
+    expect(screen.queryByText("Centro Comunitario Nuevo")).not.toBeInTheDocument();
+
+    await user.clear(searchInput);
+    await user.type(searchInput, "comunitario");
+
+    expect(screen.getByText("Centro Comunitario Nuevo")).toBeInTheDocument();
+    expect(screen.queryByText("Centro Agua")).not.toBeInTheDocument();
+    expect(screen.queryByText("Centro Higiene")).not.toBeInTheDocument();
+  });
+
+  it("shows a clear empty state when no city or name matches the search", async () => {
+    const user = userEvent.setup();
+    render(<AppShell initialCentros={centros} />);
+
+    await user.click(screen.getByRole("button", { name: /lista/i }));
+    await user.type(screen.getByPlaceholderText(/caracas, madrid o nombre del centro/i), "sevilla");
+
+    expect(screen.getByText(/no hay centros con esos filtros o esa búsqueda/i)).toBeInTheDocument();
+    expect(screen.queryByText("Centro Agua")).not.toBeInTheDocument();
+    expect(screen.queryByText("Centro Higiene")).not.toBeInTheDocument();
+    expect(screen.queryByText("Centro Comunitario Nuevo")).not.toBeInTheDocument();
   });
 
   it("uses the current browser origin when building the WhatsApp center link", async () => {
