@@ -55,6 +55,14 @@ const centroPendiente = {
   created_at: "2026-06-27T10:00:00.000Z",
 };
 
+const centroVerificado = {
+  ...centroPendiente,
+  id: "centro-2",
+  nombre: "Centro ya confirmado",
+  estado: "verificado",
+  created_at: "2026-06-26T09:00:00.000Z",
+};
+
 function mockModeratorSession() {
   getSession.mockResolvedValue({
     data: {
@@ -75,7 +83,7 @@ beforeEach(() => {
   onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
   rpc.mockResolvedValue({ data: false, error: null });
 
-  orderMock.mockResolvedValue({ data: [centroPendiente], error: null });
+  orderMock.mockResolvedValue({ data: [centroPendiente, centroVerificado], error: null });
   inMock.mockReturnValue({ order: orderMock });
   selectMock.mockReturnValue({ in: inMock });
 
@@ -121,8 +129,9 @@ describe("ModerarPanel", () => {
     render(<ModerarPanel />);
 
     expect(await screen.findByText(/centro comunitario nuevo/i)).toBeInTheDocument();
+    expect(screen.getByText(/centro ya confirmado/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /editar/i }));
+    await user.click(screen.getAllByRole("button", { name: /editar/i })[0]);
     const nombreInput = screen.getByLabelText(/nombre del centro/i);
     const areaInput = screen.getByLabelText(/zona o ciudad/i);
     const aceptaInput = screen.getByLabelText(/qué acepta/i);
@@ -157,7 +166,7 @@ describe("ModerarPanel", () => {
     render(<ModerarPanel />);
 
     expect(await screen.findByText(/centro comunitario nuevo/i)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /eliminar/i }));
+    await user.click(screen.getAllByRole("button", { name: /eliminar/i })[0]);
 
     await waitFor(() => {
       expect(deleteMock).toHaveBeenCalled();
@@ -166,5 +175,21 @@ describe("ModerarPanel", () => {
     expect(await screen.findByText(/centro eliminado/i)).toBeInTheDocument();
 
     confirmSpy.mockRestore();
+  });
+
+  it("lets moderators filter the list to only unconfirmed centers", async () => {
+    mockModeratorSession();
+    const user = userEvent.setup();
+
+    render(<ModerarPanel />);
+
+    expect(await screen.findByText(/centro comunitario nuevo/i)).toBeInTheDocument();
+    expect(screen.getByText(/centro ya confirmado/i)).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText(/ver solo no confirmadas/i));
+
+    expect(screen.getByText(/centro comunitario nuevo/i)).toBeInTheDocument();
+    expect(screen.queryByText(/centro ya confirmado/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/ver solo no confirmadas \(1\)/i)).toBeInTheDocument();
   });
 });

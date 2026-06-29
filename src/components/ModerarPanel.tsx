@@ -30,6 +30,7 @@ export default function ModerarPanel() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [contactos, setContactos] = useState<{ id: string; nombre: string; email: string; asunto: string; mensaje: string; created_at: string }[]>([]);
   const [tab, setTab] = useState<"centros" | "mensajes">("centros");
+  const [showOnlyUnconfirmed, setShowOnlyUnconfirmed] = useState(false);
 
   const showMsg = useCallback((text: string) => {
     setMsg(text);
@@ -125,6 +126,9 @@ export default function ModerarPanel() {
   }
 
   const pendingCount = centros.filter((c) => c.estado === "pendiente" || c.estado === "caducado").length;
+  const visibleCentros = showOnlyUnconfirmed
+    ? centros.filter((c) => c.estado === "pendiente" || c.estado === "caducado")
+    : centros;
 
   if (!session) {
     return (
@@ -182,8 +186,19 @@ export default function ModerarPanel() {
       </div>
 
       {tab === "centros" && (
-        <div className="space-y-3 mt-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-          {centros.map((c) => {
+        <>
+          <label className="mt-4 inline-flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-3 py-2 text-[12.5px] font-medium text-stone-700">
+            <input
+              type="checkbox"
+              checked={showOnlyUnconfirmed}
+              onChange={(e) => setShowOnlyUnconfirmed(e.target.checked)}
+              className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            Ver solo no confirmadas ({pendingCount})
+          </label>
+
+          <div className="space-y-3 mt-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+          {visibleCentros.map((c) => {
             const f = freshness(c.ultima_verificacion);
             const isEditing = editingId === c.id && editForm;
             return (
@@ -285,8 +300,13 @@ export default function ModerarPanel() {
               </div>
             );
           })}
-          {centros.length === 0 && <p className="text-stone-400 text-sm text-center py-10">No hay centros todavía.</p>}
-        </div>
+          {visibleCentros.length === 0 && (
+            <p className="text-stone-400 text-sm text-center py-10">
+              {showOnlyUnconfirmed ? "No hay centros no confirmados pendientes de revisión." : "No hay centros todavía."}
+            </p>
+          )}
+          </div>
+        </>
       )}
 
       {tab === "mensajes" && (
