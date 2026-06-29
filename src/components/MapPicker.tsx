@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type MutableRefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -30,6 +30,16 @@ function MapReady({ mapRef }: { mapRef: MutableRefObject<L.Map | null> }) {
   return null;
 }
 
+function RecenterMap({ center }: { center: [number, number] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView(center);
+  }, [center, map]);
+
+  return null;
+}
+
 export default function MapPicker({
   value, onPick,
 }: {
@@ -37,9 +47,37 @@ export default function MapPicker({
   onPick: (lat: number, lon: number) => void;
 }) {
   const mapRef = useRef<L.Map | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(value ?? ME);
+
+  useEffect(() => {
+    if (value) {
+      setMapCenter(value);
+    }
+  }, [value]);
+
+  const locatePerson = useCallback(() => {
+    if (typeof window === "undefined" || value) return;
+    if (!navigator.geolocation) return;
+    if (!window.isSecureContext && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setMapCenter([coords.latitude, coords.longitude]);
+      },
+      () => undefined,
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, [value]);
+
+  useEffect(() => {
+    locatePerson();
+  }, [locatePerson]);
+
   const pickVisibleCenter = () => {
     const center = mapRef.current?.getCenter();
-    onPick(center?.lat ?? (value ?? ME)[0], center?.lng ?? (value ?? ME)[1]);
+    onPick(center?.lat ?? mapCenter[0], center?.lng ?? mapCenter[1]);
   };
 
   return (
@@ -48,15 +86,16 @@ export default function MapPicker({
       aria-label="Seleccionar ubicación del centro"
       className="relative h-[26rem] w-full overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-inner"
     >
-      <MapContainer center={value ?? ME} zoom={14} scrollWheelZoom={false} className="h-full w-full">
+      <MapContainer center={mapCenter} zoom={14} scrollWheelZoom={false} className="h-full w-full">
         <MapReady mapRef={mapRef} />
+        <RecenterMap center={mapCenter} />
         <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <Clicker onPick={onPick} />
         {value && <Marker position={value} icon={pin} />}
       </MapContainer>
 
       <div className="pointer-events-none absolute left-3 right-3 top-3 z-[500] rounded-xl bg-white/95 px-3 py-2 text-[11.5px] font-semibold text-stone-700 shadow-sm">
-        Arrastra el mapa y toca el punto exacto del centro de acopio.
+        Arrastra el mapa y toca el punto exacto del centro de acopio. Si aceptas el permiso, primero intentaré centrarme en tu ubicación.
       </div>
 
       <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-[500] rounded-xl bg-stone-900/90 px-3 py-2 text-[11px] text-white shadow-sm">

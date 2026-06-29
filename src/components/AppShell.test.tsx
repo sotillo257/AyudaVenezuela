@@ -96,7 +96,9 @@ describe("AppShell", () => {
     const user = userEvent.setup();
     const { container } = render(<AppShell initialCentros={centros} />);
 
-    expect(screen.getByText(/Cerca de Plaza Venezuela, Caracas/i).parentElement).toHaveTextContent("2 puntos confiables");
+    const nearText = screen.getByText(/Cerca de Plaza Venezuela, Caracas/i);
+    expect(nearText).toBeInTheDocument();
+    expect(nearText.parentElement).toHaveTextContent("3 centros disponibles");
     expect(container.firstChild).toHaveClass("min-h-[100dvh]");
     expect(screen.getByTestId("mobile-content-region")).toHaveClass("flex-1");
     expect(screen.getByTestId("mobile-shell-body")).toHaveClass("flex");

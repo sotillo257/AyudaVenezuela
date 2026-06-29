@@ -17,6 +17,8 @@ const updateMock = vi.fn();
 const updateEqMock = vi.fn();
 const deleteMock = vi.fn();
 const deleteEqMock = vi.fn();
+const contactosSelectMock = vi.fn();
+const contactosOrderMock = vi.fn();
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
@@ -83,9 +85,13 @@ beforeEach(() => {
   deleteEqMock.mockResolvedValue({ error: null });
   deleteMock.mockReturnValue({ eq: deleteEqMock });
 
+  contactosOrderMock.mockResolvedValue({ data: [], error: null });
+  contactosSelectMock.mockReturnValue({ order: contactosOrderMock });
+
   fromMock.mockImplementation((table: string) => {
     if (table === "v_centros") return { select: selectMock };
     if (table === "centros") return { update: updateMock, delete: deleteMock };
+    if (table === "contactos") return { select: contactosSelectMock };
     throw new Error(`Unexpected table: ${table}`);
   });
 });

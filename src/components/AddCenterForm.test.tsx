@@ -45,7 +45,10 @@ describe("AddCenterForm", () => {
     await waitFor(() => {
       expect(rpcMock).toHaveBeenCalledWith("proponer_centro", expect.objectContaining({
         p_nombre: "Punto Vecinal",
-        p_responsable: "Responsable del centro: María Pérez | Propuesto por: Jesús Sotillo · Tel: +34600111222",
+        p_responsable: "María Pérez",
+        p_proponente_nombre: "Jesús",
+        p_proponente_apellido: "Sotillo",
+        p_proponente_telefono: "+34600111222",
       }));
     });
 
