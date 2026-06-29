@@ -272,37 +272,59 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
     <div className="min-h-[100dvh] bg-stone-200 lg:p-4 xl:p-6">
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1440px] flex-col overflow-hidden bg-stone-50 shadow-xl shadow-stone-300/40 lg:h-[calc(100dvh-2rem)] lg:min-h-0 lg:rounded-[30px] lg:border lg:border-stone-300/70 lg:shadow-2xl lg:shadow-stone-400/20 xl:h-[calc(100dvh-3rem)]">
 
-        <header className="border-b border-stone-200 bg-white px-[18px] pb-4 pt-4 z-30 lg:px-7 lg:pb-5 lg:pt-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl">
-              <img src="/logo.png" alt="AcopiosVenezuela.com" className="h-9 w-auto lg:h-11" />
-              <div className="mt-0.5 flex items-center gap-1 text-[11px] text-stone-500 lg:text-[13px]">
-                <MapPin size={11} className="lg:h-3.5 lg:w-3.5" />
-                {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"} · {centros.length} centros disponibles
+        <header className="z-30 border-b border-stone-200 bg-white px-[18px] pb-3 pt-3.5 lg:px-7 lg:pb-5 lg:pt-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start justify-between gap-3 lg:max-w-3xl lg:flex-1">
+              <div className="min-w-0">
+                <img src="/logo.png" alt="AcopiosVenezuela.com" className="h-8 w-auto lg:h-11" />
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-stone-500 lg:text-[13px]">
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin size={11} className="lg:h-3.5 lg:w-3.5" />
+                    {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"}
+                  </span>
+                  <span className="hidden text-stone-300 sm:inline">•</span>
+                  <span>{centros.length} centros disponibles</span>
+                </div>
               </div>
-              <button
-                onClick={() => locateUser(true)}
-                disabled={locationStatus === "locating"}
-                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 disabled:text-stone-400 lg:text-[12.5px]"
-              >
-                <Navigation size={12} /> {locationStatus === "locating" ? "Detectando ubicación…" : userPos ? "Actualizar mi ubicación" : "Usar mi ubicación real"}
-              </button>
+
+              <div className="flex shrink-0 items-center gap-2 lg:hidden">
+                <Link href="/anadir" className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1.5 text-[11.5px] font-semibold text-emerald-700">
+                  <Plus size={12} /> Añadir
+                </Link>
+                <Link href="/contacto" className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1.5 text-[11.5px] font-semibold text-stone-600">
+                  <Mail size={12} /> Contacto
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 lg:items-end lg:gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => locateUser(true)}
+                  disabled={locationStatus === "locating"}
+                  className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-[11.5px] font-semibold text-sky-700 disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400 lg:px-4 lg:py-2 lg:text-[12.5px]"
+                >
+                  <Navigation size={12} /> {locationStatus === "locating" ? "Detectando ubicación…" : userPos ? "Actualizar mi ubicación" : "Usar mi ubicación real"}
+                </button>
+
+                <div className="hidden items-center gap-2 lg:flex">
+                  <Link href="/anadir" className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-4 py-2 text-[13px] font-semibold text-emerald-700">
+                    <Plus size={13} /> Añadir
+                  </Link>
+                  <Link href="/contacto" className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-4 py-2 text-[13px] font-semibold text-stone-600">
+                    <Mail size={13} /> Contacto
+                  </Link>
+                </div>
+              </div>
+
               {locationMessage && (
-                <p className={`mt-1 max-w-[540px] text-[10.5px] leading-snug lg:text-[12px] ${
+                <p className={`max-w-[540px] text-[10.5px] leading-snug lg:text-right lg:text-[12px] ${
                   locationStatus === "ready" ? "text-emerald-700" : locationStatus === "insecure" || locationStatus === "denied" ? "text-amber-700" : "text-stone-500"
                 }`}>
                   {locationMessage}
                 </p>
               )}
-            </div>
 
-            <div className="flex items-center gap-2 lg:flex-col lg:items-end lg:gap-3">
-              <Link href="/anadir" className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 lg:px-4 lg:py-2 lg:text-[13px]">
-                <Plus size={13} /> Añadir
-              </Link>
-              <Link href="/contacto" className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1.5 text-[12px] font-semibold text-stone-600 lg:px-4 lg:py-2 lg:text-[13px]">
-                <Mail size={13} /> Contacto
-              </Link>
               <div className="hidden items-center gap-1 rounded-2xl border border-stone-200 bg-stone-100/80 p-1 lg:flex">
                 {([
                   ["mapa", MapIcon, "Mapa"],
