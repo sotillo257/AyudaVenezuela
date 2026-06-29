@@ -289,7 +289,7 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
               </div>
 
               <div className="mt-3 space-y-1.5 lg:mt-4">
-                <h1 className="text-[24px] font-extrabold leading-[1.05] tracking-[-0.02em] text-stone-900 lg:text-[32px]">
+                <h1 className="text-[20px] font-extrabold leading-[1.05] tracking-[-0.03em] text-stone-900 sm:text-[22px] lg:text-[32px] whitespace-nowrap">
                   Centros de Acopio para ayudar a Venezuela
                 </h1>
                 <p className="max-w-2xl text-[13px] leading-relaxed text-stone-600 lg:text-[15px]">
