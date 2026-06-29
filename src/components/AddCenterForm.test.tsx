@@ -58,6 +58,28 @@ describe("AddCenterForm", () => {
     expect(screen.getByText(/un moderador lo revisará/i)).toBeInTheDocument();
   });
 
+  it("mantiene los campos del formulario alineados a ancho completo en móvil", () => {
+    render(<AddCenterForm />);
+
+    const direccion = screen.getByPlaceholderText(/dirección/i);
+    const area = screen.getByPlaceholderText(/zona \/ ciudad/i);
+    const responsable = screen.getByPlaceholderText(/persona responsable del centro/i);
+    const nombre = screen.getByPlaceholderText(/tu nombre/i);
+    const apellido = screen.getByPlaceholderText(/tu apellido/i);
+    const telefono = screen.getByPlaceholderText(/tu teléfono/i);
+
+    expect(direccion).toHaveClass("block", "w-full", "min-w-0");
+    expect(area).toHaveClass("block", "w-full", "min-w-0");
+    expect(nombre).toHaveClass("block", "w-full", "min-w-0");
+    expect(apellido).toHaveClass("block", "w-full", "min-w-0");
+    expect(responsable.parentElement).toHaveClass("grid", "w-full", "grid-cols-1");
+    expect(telefono.parentElement).toHaveClass("grid", "w-full", "grid-cols-1");
+    expect(direccion.parentElement).toHaveClass("grid", "w-full", "grid-cols-1");
+    expect(area.parentElement).toBe(direccion.parentElement);
+    expect(nombre.parentElement).toHaveClass("grid", "w-full", "grid-cols-1");
+    expect(apellido.parentElement).toBe(nombre.parentElement);
+  });
+
   it("bloquea el envío si faltan los datos de identificación del proponente", async () => {
     const user = userEvent.setup();
     render(<AddCenterForm />);

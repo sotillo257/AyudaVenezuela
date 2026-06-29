@@ -66,7 +66,8 @@ export default function AddCenterForm() {
     );
   }
 
-  const input = "w-full text-[14px] bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 placeholder:text-stone-400 lg:text-[15px] lg:px-4 lg:py-3";
+  const input = "block w-full min-w-0 text-[14px] bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 placeholder:text-stone-400 lg:text-[15px] lg:px-4 lg:py-3";
+  const twoColRow = "grid w-full grid-cols-1 gap-3 lg:grid-cols-2";
 
   return (
     <div className="px-5 py-5 space-y-3 lg:px-8 lg:py-7 lg:space-y-4">
@@ -79,7 +80,7 @@ export default function AddCenterForm() {
         Estos datos <b>no se mostrarán públicamente</b>; se usarán solo para validar el centro si hace falta contactarte.
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className={twoColRow}>
         <input className={input} placeholder="Organización responsable *" value={form.nombre} onChange={set("nombre")} />
 
         <select className={input} value={form.operador} onChange={set("operador")}>
@@ -87,21 +88,25 @@ export default function AddCenterForm() {
         </select>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className={twoColRow}>
         <input className={input} placeholder="Dirección" value={form.direccion} onChange={set("direccion")} />
         <input className={input} placeholder="Zona / ciudad (ej. Caracas)" value={form.area} onChange={set("area")} />
       </div>
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className={twoColRow}>
         <input className={input} placeholder="Contacto público del centro (teléfono / email)" value={form.contacto} onChange={set("contacto")} />
         <input className={input} placeholder="Enlace público de evidencia (URL)" value={form.fuente_url} onChange={set("fuente_url")} />
       </div>
-      <input className={input} placeholder="Persona responsable del centro" value={form.responsable} onChange={set("responsable")} />
+      <div className={twoColRow}>
+        <input className={input} placeholder="Persona responsable del centro" value={form.responsable} onChange={set("responsable")} />
+      </div>
 
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className={twoColRow}>
         <input className={input} placeholder="Tu nombre *" value={form.proponenteNombre} onChange={set("proponenteNombre")} />
         <input className={input} placeholder="Tu apellido *" value={form.proponenteApellido} onChange={set("proponenteApellido")} />
       </div>
-      <input className={input} placeholder="Tu teléfono *" value={form.proponenteTelefono} onChange={set("proponenteTelefono")} />
+      <div className={twoColRow}>
+        <input className={input} placeholder="Tu teléfono *" value={form.proponenteTelefono} onChange={set("proponenteTelefono")} />
+      </div>
 
       <div>
         <p className="text-[12px] font-semibold text-stone-600 mb-1.5">¿Qué acepta?</p>
