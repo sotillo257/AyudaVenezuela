@@ -1,16 +1,19 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import AddCenterForm from "./AddCenterForm";
 
 const rpcMock = vi.fn();
 
 vi.mock("next/dynamic", () => ({
-  default: () => function MockMapPicker({ onPick }: { onPick: (lat: number, lon: number) => void }) {
+  default: () => function MockMapPicker({ value, onPick }: { value: [number, number] | null; onPick: (lat: number, lon: number) => void }) {
     return (
-      <button type="button" onClick={() => onPick(10.5, -66.889)}>
-        Marcar ubicación
-      </button>
+      <div>
+        <button type="button" onClick={() => onPick(10.5, -66.889)}>
+          Marcar ubicación
+        </button>
+        <div data-testid="map-picker-value">{value ? value.join(",") : "sin-ubicacion"}</div>
+      </div>
     );
   },
 }));
@@ -25,6 +28,11 @@ describe("AddCenterForm", () => {
   beforeEach(() => {
     rpcMock.mockReset();
     rpcMock.mockResolvedValue({ error: null });
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("pide identidad del proponente, aclara privacidad y envía esos datos para validación interna", async () => {
@@ -78,6 +86,40 @@ describe("AddCenterForm", () => {
     expect(area.parentElement).toBe(direccion.parentElement);
     expect(nombre.parentElement).toHaveClass("grid", "w-full", "grid-cols-1");
     expect(apellido.parentElement).toBe(nombre.parentElement);
+  });
+
+  it("usa sugerencias de dirección para rellenar el mapa con un punto aproximado antes del ajuste manual", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ([{
+        place_id: 123,
+        display_name: "Av. Libertador, Caracas, Distrito Capital, Venezuela",
+        lat: "10.5006",
+        lon: "-66.8890",
+        address: { city: "Caracas" },
+      }]),
+    } as Response);
+
+    render(<AddCenterForm />);
+
+    await user.type(
+      screen.getByPlaceholderText(/escribe una calle, zona o referencia/i),
+      "Av Libertador Caracas"
+    );
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledOnce();
+    });
+
+    const suggestion = await screen.findByRole("button", { name: /av\. libertador, caracas/i });
+    await user.click(suggestion);
+
+    expect(screen.getByPlaceholderText(/dirección/i)).toHaveValue("Av. Libertador, Caracas, Distrito Capital, Venezuela");
+    expect(screen.getByPlaceholderText(/zona \/ ciudad/i)).toHaveValue("Caracas");
+    expect(screen.getByTestId("map-picker-value")).toHaveTextContent("10.5006,-66.889");
+    expect(screen.getByText(/punto aproximado colocado desde/i)).toBeInTheDocument();
   });
 
   it("bloquea el envío si faltan los datos de identificación del proponente", async () => {

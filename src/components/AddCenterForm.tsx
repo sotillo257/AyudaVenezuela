@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { CATEGORIAS, OPERADOR_LABEL } from "@/lib/util";
 import type { Operador } from "@/lib/types";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2, MapPin } from "lucide-react";
 
 const MapPicker = dynamic(() => import("./MapPicker"), {
   ssr: false,
@@ -15,6 +15,21 @@ const MapPicker = dynamic(() => import("./MapPicker"), {
 
 const OPERADORES = Object.keys(OPERADOR_LABEL) as Operador[];
 
+type AddressSuggestion = {
+  place_id: number;
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    municipality?: string;
+    state?: string;
+    county?: string;
+  };
+};
+
 export default function AddCenterForm() {
   const supabase = useMemo(() => createClient(), []);
   const [done, setDone] = useState(false);
@@ -22,6 +37,11 @@ export default function AddCenterForm() {
   const [err, setErr] = useState<string | null>(null);
   const [pos, setPos] = useState<[number, number] | null>(null);
   const [acepta, setAcepta] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<AddressSuggestion[]>([]);
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [selectedSearchLabel, setSelectedSearchLabel] = useState<string | null>(null);
   const [form, setForm] = useState({
     nombre: "", operador: "asociacion" as Operador, direccion: "", area: "",
     contacto: "", fuente_url: "", responsable: "",
@@ -30,6 +50,55 @@ export default function AddCenterForm() {
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+
+    if (query.length < 3) {
+      setSearchResults([]);
+      setSearchError(null);
+      setSearchingAddress(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      setSearchingAddress(true);
+      setSearchError(null);
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&q=${encodeURIComponent(query)}`,
+          {
+            signal: controller.signal,
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+
+        const data = (await response.json()) as AddressSuggestion[];
+        setSearchResults(data);
+        if (data.length === 0) {
+          setSearchError("No encontré una dirección clara. Prueba con calle, ciudad o una referencia más específica.");
+        }
+      } catch (error) {
+        if ((error as Error).name === "AbortError") return;
+        setSearchResults([]);
+        setSearchError("No he podido buscar la dirección ahora mismo. Puedes seguir marcando el punto en el mapa.");
+      } finally {
+        setSearchingAddress(false);
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchQuery]);
 
   async function submit() {
     setErr(null);
@@ -51,6 +120,29 @@ export default function AddCenterForm() {
     setBusy(false);
     if (error) { setErr(error.message); return; }
     setDone(true);
+  }
+
+  function selectSuggestion(result: AddressSuggestion) {
+    const lat = Number(result.lat);
+    const lon = Number(result.lon);
+    const area = result.address?.city
+      ?? result.address?.town
+      ?? result.address?.village
+      ?? result.address?.municipality
+      ?? result.address?.state
+      ?? result.address?.county
+      ?? "";
+
+    setPos([lat, lon]);
+    setForm((current) => ({
+      ...current,
+      direccion: current.direccion.trim() ? current.direccion : result.display_name,
+      area: current.area.trim() ? current.area : area,
+    }));
+    setSelectedSearchLabel(result.display_name);
+    setSearchQuery(result.display_name);
+    setSearchResults([]);
+    setSearchError(null);
   }
 
   if (done) {
@@ -122,11 +214,68 @@ export default function AddCenterForm() {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <p className="text-[12px] font-semibold text-stone-600">
+          Buscar dirección o referencia
+        </p>
+        <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+          <label className="block">
+            <span className="sr-only">Buscar dirección o referencia</span>
+            <div className="relative">
+              <MapPin size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <input
+                className={`${input} pl-9`}
+                placeholder="Escribe una calle, zona o referencia para colocar el centro"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSelectedSearchLabel(null);
+                }}
+              />
+              {searchingAddress && <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-stone-400" />}
+            </div>
+          </label>
+          <p className="mt-2 text-[11.5px] leading-relaxed text-stone-500">
+            Te sugiero direcciones para mover el mapa y dejar el marcador casi en el sitio correcto. Luego puedes ajustar el punto manualmente si hace falta.
+          </p>
+
+          {selectedSearchLabel && pos && (
+            <p className="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-[11.5px] text-emerald-800">
+              Punto aproximado colocado desde: <b>{selectedSearchLabel}</b>
+            </p>
+          )}
+
+          {searchError && (
+            <p className="mt-2 text-[11.5px] text-amber-700">{searchError}</p>
+          )}
+
+          {searchResults.length > 0 && (
+            <div className="mt-3 overflow-hidden rounded-2xl border border-stone-200">
+              <ul className="divide-y divide-stone-200 bg-white">
+                {searchResults.map((result) => (
+                  <li key={result.place_id}>
+                    <button
+                      type="button"
+                      onClick={() => selectSuggestion(result)}
+                      className="w-full px-3 py-3 text-left text-[12.5px] leading-relaxed text-stone-700 transition hover:bg-stone-50"
+                    >
+                      {result.display_name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div>
         <p className="text-[12px] font-semibold text-stone-600 mb-1.5">
           Ubicación * {pos && <span className="text-stone-400 font-normal">({pos[0].toFixed(4)}, {pos[1].toFixed(4)})</span>}
         </p>
-        <p className="text-[11px] text-stone-400 mb-1.5">Toca el mapa para fijar el punto exacto.</p>
+        <p className="text-[11px] text-stone-400 mb-1.5">
+          Busca una dirección para acercarte más rápido y luego toca el mapa si quieres ajustar el punto exacto.
+        </p>
         <MapPicker value={pos} onPick={(lat, lon) => setPos([lat, lon])} />
       </div>
 
