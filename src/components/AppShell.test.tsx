@@ -129,6 +129,19 @@ describe("AppShell", () => {
     expect(within(donationPanel).getByText("Agua")).toBeInTheDocument();
   });
 
+  it("uses the current browser origin when building the WhatsApp center link", async () => {
+    const user = userEvent.setup();
+    render(<AppShell initialCentros={centros} />);
+
+    await user.click(screen.getByRole("button", { name: /lista/i }));
+    await user.click(screen.getByRole("button", { name: /centro higiene/i }));
+    await user.click(screen.getByRole("button", { name: /whatsapp/i }));
+
+    const whatsappLink = screen.getByRole("link", { name: /abrir whatsapp/i });
+    const decodedHref = decodeURIComponent(whatsappLink.getAttribute("href") ?? "");
+    expect(decodedHref).toContain(`${window.location.origin}/centro/2`);
+  });
+
   it("warns clearly when a point is visible but not yet verified", async () => {
     const user = userEvent.setup();
     render(<AppShell initialCentros={centros} />);

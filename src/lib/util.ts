@@ -60,8 +60,29 @@ export function mapsUrl(lat: number, lon: number) {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
 }
 
-export function whatsappText(c: { nombre: string; area: string | null; acepta: string[]; horario: string | null }, url: string) {
-  const t = `Centro de acopio en ${c.area ?? "tu zona"}: ${c.nombre}. Recibe ${c.acepta.join(", ")}.` +
-    (c.horario ? ` Horario: ${c.horario}.` : "") + ` Info y ruta: ${url}`;
-  return `https://wa.me/?text=${encodeURIComponent(t)}`;
+export function buildCenterUrl(centerId: string, origin?: string) {
+  const base = (origin ?? "").trim().replace(/\/$/, "");
+  return base ? `${base}/centro/${centerId}` : `/centro/${centerId}`;
+}
+
+export function whatsappMessage(
+  c: { nombre: string; area: string | null; acepta: string[]; horario: string | null },
+  url: string
+) {
+  const area = c.area ?? "tu zona";
+  const accepts = c.acepta.length > 0 ? c.acepta.join(", ") : "donaciones";
+  return [
+    `Centro de acopio en ${area}: ${c.nombre}.`,
+    `Recibe ${accepts}.`,
+    c.horario ? `Horario: ${c.horario}.` : null,
+    "",
+    `Info y ruta: ${url}`,
+  ].filter((part): part is string => part !== null).join("\n");
+}
+
+export function whatsappText(
+  c: { nombre: string; area: string | null; acepta: string[]; horario: string | null },
+  url: string
+) {
+  return `https://wa.me/?text=${encodeURIComponent(whatsappMessage(c, url))}`;
 }

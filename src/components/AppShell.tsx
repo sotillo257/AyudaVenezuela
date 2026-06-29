@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { Centro } from "@/lib/types";
 import {
-  STATUS, OPERADOR_LABEL, CATEGORIAS, freshness, km, mapsUrl, whatsappText, ME, distanceMeters,
+  STATUS, OPERADOR_LABEL, CATEGORIAS, freshness, km, mapsUrl, whatsappText, whatsappMessage, buildCenterUrl, ME, distanceMeters,
 } from "@/lib/util";
 import { createClient } from "@/lib/supabase/client";
 
@@ -456,18 +456,19 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
             <div className="px-5 pb-7 pt-2 lg:px-7 lg:pb-8 lg:pt-3">
               <h3 className="text-lg font-extrabold lg:text-[22px]">Compartir por WhatsApp</h3>
               {(() => {
-                const url = `${SITE}/centro/${sharing.id}`;
-                const txt = `Centro de acopio en ${sharing.area}: ${sharing.nombre}. Recibe ${sharing.acepta.join(", ")}.`;
+                const origin = typeof window !== "undefined" ? window.location.origin : SITE;
+                const url = buildCenterUrl(sharing.id, origin || SITE);
+                const txt = whatsappMessage(sharing, url);
                 return (
                   <>
-                    <div className="mt-3 rounded-xl bg-stone-100 p-3 text-[13px] leading-relaxed text-stone-700 lg:text-[14px]">
-                      {txt} {url}
+                    <div className="mt-3 whitespace-pre-line rounded-xl bg-stone-100 p-3 text-[13px] leading-relaxed text-stone-700 lg:text-[14px]">
+                      {txt}
                     </div>
                     <a href={whatsappText(sharing, url)} target="_blank" rel="noreferrer"
                       className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#25D366] py-3 text-[14px] font-semibold text-white lg:text-[15px]">
                       <Share2 size={15} /> Abrir WhatsApp
                     </a>
-                    <button onClick={() => { navigator.clipboard?.writeText(`${txt} ${url}`).catch(() => {}); flash("Texto copiado"); }}
+                    <button onClick={() => { navigator.clipboard?.writeText(txt).catch(() => {}); flash("Texto copiado"); }}
                       className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-stone-200 bg-white py-2.5 text-[13px] font-medium text-stone-700 lg:text-[14px]">
                       <Copy size={14} /> Copiar texto
                     </button>

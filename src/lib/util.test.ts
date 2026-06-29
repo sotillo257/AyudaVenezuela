@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { distanceMeters, freshness, km, whatsappText } from "./util";
+import { buildCenterUrl, distanceMeters, freshness, km, whatsappMessage, whatsappText } from "./util";
 
 describe("util", () => {
   it("formats meter and kilometer distances", () => {
@@ -29,14 +29,26 @@ describe("util", () => {
     vi.useRealTimers();
   });
 
-  it("builds WhatsApp sharing links with center details", () => {
+  it("builds center URLs from the current origin without duplicate slashes", () => {
+    expect(buildCenterUrl("123", "https://example.com")).toBe("https://example.com/centro/123");
+    expect(buildCenterUrl("123", "https://example.com/")).toBe("https://example.com/centro/123");
+    expect(buildCenterUrl("123")).toBe("/centro/123");
+  });
+
+  it("builds WhatsApp sharing links with center details and a clean standalone center URL", () => {
+    const message = whatsappMessage(
+      { nombre: "Centro Demo", area: "Madrid", acepta: ["Agua", "Alimentos"], horario: "10:00-14:00" },
+      "https://example.com/centro/1"
+    );
     const url = whatsappText(
       { nombre: "Centro Demo", area: "Madrid", acepta: ["Agua", "Alimentos"], horario: "10:00-14:00" },
       "https://example.com/centro/1"
     );
 
+    expect(message).toContain("Centro Demo");
+    expect(message).toContain("Agua, Alimentos");
+    expect(message).toContain("\nInfo y ruta: https://example.com/centro/1");
     expect(url).toContain("https://wa.me/?text=");
-    expect(decodeURIComponent(url)).toContain("Centro Demo");
-    expect(decodeURIComponent(url)).toContain("Agua, Alimentos");
+    expect(decodeURIComponent(url)).toContain(message);
   });
 });
