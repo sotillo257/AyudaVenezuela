@@ -20,6 +20,7 @@ const MapView = dynamic(() => import("./MapView"), {
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 const NEAREST_RADIUS_M = 20_000_000;
+const YUMMY_DONATION_URL = "https://dona.yummyrides.com/";
 
 type LocationStatus = "idle" | "locating" | "ready" | "denied" | "unavailable" | "insecure";
 
@@ -274,46 +275,77 @@ export default function AppShell({ initialCentros }: { initialCentros: Centro[];
 
         <header className="z-30 border-b border-stone-200 bg-white px-[18px] pb-3 pt-3.5 lg:px-7 lg:pb-5 lg:pt-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start justify-between gap-3 lg:max-w-3xl lg:flex-1">
-              <div className="min-w-0">
-                <img src="/logo.png" alt="AcopiosVenezuela.com" className="h-8 w-auto lg:h-11" />
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-stone-500 lg:text-[13px]">
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin size={11} className="lg:h-3.5 lg:w-3.5" />
-                    {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"}
-                  </span>
-                  <span className="hidden text-stone-300 sm:inline">•</span>
-                  <span>{centros.length} centros disponibles</span>
+            <div className="min-w-0 text-center lg:max-w-3xl lg:flex-1 lg:text-left">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <img src="/logo.png" alt="AcopiosVenezuela.com" className="h-9 w-auto lg:h-11" />
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2 lg:hidden">
+                  <Link href="/anadir" className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1.5 text-[11.5px] font-semibold text-emerald-700 shadow-sm ring-1 ring-emerald-100">
+                    <Plus size={12} /> Añadir centro
+                  </Link>
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2 lg:hidden">
-                <Link href="/anadir" className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1.5 text-[11.5px] font-semibold text-emerald-700">
-                  <Plus size={12} /> Añadir
-                </Link>
-                <Link href="/contacto" className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1.5 text-[11.5px] font-semibold text-stone-600">
-                  <Mail size={12} /> Contacto
-                </Link>
+              <div className="mt-3 space-y-1.5 lg:mt-4">
+                <h1 className="text-[24px] font-extrabold leading-[1.05] tracking-[-0.02em] text-stone-900 lg:text-[32px]">
+                  Centros de Acopio para ayudar a Venezuela
+                </h1>
+                <p className="max-w-2xl text-[13px] leading-relaxed text-stone-600 lg:text-[15px]">
+                  Encuentra centros cercanos dentro y fuera de Venezuela y prioriza los puntos ya verificados para donar con más confianza.
+                </p>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] text-stone-500 lg:mt-4 lg:justify-start lg:text-[13px]">
+                <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-medium text-stone-600 lg:px-3 lg:text-[12px]">
+                  <MapPin size={11} className="lg:h-3.5 lg:w-3.5" />
+                  {userPos ? "Cerca de ti" : "Cerca de Plaza Venezuela, Caracas"}
+                </span>
+                <span>{centros.length} centros disponibles</span>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 lg:items-end lg:gap-3">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col items-center gap-2 lg:items-end lg:gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-end">
                 <button
                   onClick={() => locateUser(true)}
                   disabled={locationStatus === "locating"}
-                  className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-[11.5px] font-semibold text-sky-700 disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400 lg:px-4 lg:py-2 lg:text-[12.5px]"
+                  className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[10.5px] font-semibold text-sky-700 disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400 lg:px-4 lg:py-2 lg:text-[12.5px]"
                 >
-                  <Navigation size={12} /> {locationStatus === "locating" ? "Detectando ubicación…" : userPos ? "Actualizar mi ubicación" : "Usar mi ubicación real"}
+                  <Navigation size={11} /> {locationStatus === "locating" ? "Detectando ubicación…" : userPos ? "Actualizar mi ubicación" : "Usar mi ubicación real"}
                 </button>
+
+                <div className="flex items-center gap-2 lg:hidden">
+                  <Link href="/contacto" className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1.5 text-[11.5px] font-semibold text-stone-600 whitespace-nowrap">
+                    <Mail size={12} /> Contacto
+                  </Link>
+
+                  <a
+                    href={YUMMY_DONATION_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-700 to-fuchsia-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-sm whitespace-nowrap"
+                  >
+                    <Heart size={12} /> Dona en Yummy
+                  </a>
+                </div>
 
                 <div className="hidden items-center gap-2 lg:flex">
                   <Link href="/anadir" className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-4 py-2 text-[13px] font-semibold text-emerald-700">
-                    <Plus size={13} /> Añadir
+                    <Plus size={13} /> Añadir centro
                   </Link>
                   <Link href="/contacto" className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-4 py-2 text-[13px] font-semibold text-stone-600">
                     <Mail size={13} /> Contacto
                   </Link>
+                  <a
+                    href={YUMMY_DONATION_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 py-2 text-[13px] font-semibold text-white shadow-sm"
+                  >
+                    <Heart size={13} /> Dona en Yummy
+                  </a>
                 </div>
               </div>
 

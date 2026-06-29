@@ -96,9 +96,15 @@ describe("AppShell", () => {
     const user = userEvent.setup();
     const { container } = render(<AppShell initialCentros={centros} />);
 
+    expect(screen.getByRole("heading", { name: /centros de acopio para ayudar a venezuela/i })).toBeInTheDocument();
+    expect(screen.getByText(/encuentra centros cercanos dentro y fuera de venezuela/i)).toBeInTheDocument();
     const nearText = screen.getByText(/Cerca de Plaza Venezuela, Caracas/i);
     expect(nearText).toBeInTheDocument();
     expect(nearText.parentElement).toHaveTextContent("3 centros disponibles");
+    const yummyLink = screen.getAllByRole("link", { name: /dona en yummy/i })[0];
+    expect(yummyLink).toHaveAttribute("href", "https://dona.yummyrides.com/");
+    const locationButton = screen.getByRole("button", { name: /usar mi ubicación real/i });
+    expect(locationButton).toHaveClass("px-2.5", "py-1", "text-[10.5px]");
     expect(container.firstChild).toHaveClass("min-h-[100dvh]");
     expect(screen.getByTestId("mobile-content-region")).toHaveClass("flex-1");
     expect(screen.getByTestId("mobile-shell-body")).toHaveClass("flex");
