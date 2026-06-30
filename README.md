@@ -2,7 +2,7 @@
 
 Webapp móvil (Next.js App Router) para encontrar **centros de acopio verificados**:
 mapa con tu ubicación, qué reciben hoy, horario, próxima salida hacia Venezuela,
-estado de verificación con **caducidad automática**, compartir por WhatsApp y URL propia por centro.
+estado de verificación, compartir por WhatsApp y URL propia por centro.
 
 Stack: **Next 14 + React 18 + react-leaflet (OpenStreetMap) + Supabase (Postgres + PostGIS + RLS + pg_cron)**.
 
@@ -12,7 +12,7 @@ Stack: **Next 14 + React 18 + react-leaflet (OpenStreetMap) + Supabase (Postgres
 
 1. En tu proyecto `ayudaVenezuela`, abre **SQL Editor** y ejecuta el contenido de
    `supabase/migrations/0001_init.sql`. Crea tablas, PostGIS, las RPC, las políticas RLS,
-   la caducidad por `pg_cron` y 6 centros de **demostración**.
+   el job base de `pg_cron` y 6 centros de **demostración**.
    - Si `create extension pg_cron` falla, actívalo en **Database → Extensions** y vuelve a correr.
 2. Copia `.env.local.example` a `.env.local` y rellena con **Settings → API**:
    ```
@@ -52,14 +52,13 @@ Rutas: `/` (mapa, lista, qué donar) · `/centro/[id]` (ficha pública + OpenGra
 ---
 
 ## Modelo de confianza (lo importante)
-- **Público** solo ve centros `verificado` (lo impone RLS en la base, no el frontend).
+- **Público** ve centros `verificado` y `pendiente` (lo impone RLS en la base, no el frontend).
 - **Proponer centro** (`proponer_centro`) siempre entra como `pendiente`; nadie puede crear un verificado desde fuera.
-- **Caducidad**: `caducar_centros()` (job horario de `pg_cron`) pasa a `caducado` cualquier
-  `verificado` con más de 48 h sin reconfirmar → desaparece del mapa hasta que un moderador lo reverifique.
+- **Caducidad automática**: desactivada. Los centros verificados ya no cambian solos a `caducado` por tiempo.
 - **Reportes** de "ya no está activo" no desmarcan nada solos: quedan para revisión del moderador.
 - **Historial**: cada cambio de estado y cada propuesta/reporte se registra en `historial_cambios`.
 
-Ajusta el umbral de 48 h en `caducar_centros()` dentro de la migración.
+Si en el futuro quieres reactivar la caducidad automática, puedes volver a implementar la lógica dentro de `caducar_centros()`.
 
 ---
 
