@@ -17,14 +17,14 @@ describe("util", () => {
     expect(distanceMeters(madrid, barcelona)).toBeLessThan(520_000);
   });
 
-  it("reports verification freshness and expiration", () => {
+  it("reports verification freshness without automatic expiration", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-26T12:00:00Z"));
 
     expect(freshness(null).text).toBe("Sin verificar aún");
     expect(freshness("2026-06-26T11:30:00Z").text).toBe("Comprobado hace menos de 1 h");
-    expect(freshness("2026-06-25T12:00:00Z").left).toBe(24);
-    expect(freshness("2026-06-23T12:00:00Z").expired).toBe(true);
+    expect(freshness("2026-06-25T12:00:00Z").text).toBe("Comprobado hace 1 d");
+    expect(freshness("2026-06-23T12:00:00Z").expired).toBe(false);
 
     vi.useRealTimers();
   });

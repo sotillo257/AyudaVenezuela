@@ -1,7 +1,5 @@
 import type { Estado, Operador } from "./types";
 
-export const EXPIRY_H = 48;
-
 export const ME: [number, number] = [10.5006, -66.8890]; // Plaza Venezuela, Caracas (fallback)
 
 export const STATUS: Record<Estado, { label: string; color: string; pill: string }> = {
@@ -30,10 +28,10 @@ export const CATEGORIAS = [
 export function freshness(ultima: string | null) {
   if (!ultima) return { text: "Sin verificar aún", cls: "text-amber-600", expired: false, left: null as number | null };
   const h = Math.max(0, Math.floor((Date.now() - new Date(ultima).getTime()) / 3.6e6));
-  const left = EXPIRY_H - h;
-  if (left <= 0) return { text: "Verificación caducada", cls: "text-rose-600", expired: true, left: 0 };
-  const ago = h < 1 ? "hace menos de 1 h" : `hace ${h} h`;
-  return { text: `Comprobado ${ago}`, cls: left <= 12 ? "text-amber-600" : "text-stone-500", expired: false, left };
+  if (h < 1) return { text: "Comprobado hace menos de 1 h", cls: "text-emerald-700", expired: false, left: null as number | null };
+  if (h < 24) return { text: `Comprobado hace ${h} h`, cls: h >= 48 ? "text-amber-600" : "text-stone-500", expired: false, left: null as number | null };
+  const days = Math.floor(h / 24);
+  return { text: `Comprobado hace ${days} d`, cls: "text-stone-500", expired: false, left: null as number | null };
 }
 
 export function km(distancia_m?: number) {
